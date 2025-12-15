@@ -30,10 +30,10 @@ export default function Navbar() {
               <NavLink to="/services">Services</NavLink>
             </li>
             <li>
-              <a href="#about">About</a>
+              <NavLink to="/about">About</NavLink>
             </li>
             <li>
-              <a href="#contact">Contact</a>
+              <NavLink to="/contact">Contact</NavLink>
             </li>
           </ul>
         </div>

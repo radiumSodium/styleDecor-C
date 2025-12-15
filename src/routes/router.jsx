@@ -9,6 +9,8 @@ import CoverageMapPage from "../pages/map/CoverageMapPage";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import ErrorPage from "../pages/error/ErrorPage";
+import About from "../pages/About/About";
+import Contact from "../pages/Contact/Contact";
 
 import UserDashboard from "../dashboards/user/UserDashboard";
 import AdminDashboard from "../dashboards/admin/AdminDashboard";
@@ -28,6 +30,9 @@ export const router = createBrowserRouter([
       { path: "coverage", Component: CoverageMapPage },
       { path: "login", Component: Login },
       { path: "register", Component: Register },
+      { path: "about", Component: About},
+      { path: "contact", Component: Contact},
+
     ],
   },
   {
