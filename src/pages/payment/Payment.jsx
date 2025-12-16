@@ -1,6 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axiosSecure from "../../api/axiosSecure";
+
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+import CheckoutForm from "./CheckoutForm";
 
 function formatMoneyBDT(n) {
   if (typeof n !== "number") return "—";
@@ -15,7 +19,11 @@ export default function Payment() {
   const [creating, setCreating] = useState(true);
   const [error, setError] = useState("");
 
-  // If refresh happens, state may be null
+  const stripePromise = useMemo(() => {
+    const pk = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+    return loadStripe(pk);
+  }, []);
+
   useEffect(() => {
     if (!state?.serviceId) {
       navigate("/services");
@@ -27,7 +35,6 @@ export default function Payment() {
         setCreating(true);
         setError("");
 
-        // Prevent duplicate booking if user comes back to this page
         const existingId = sessionStorage.getItem("sd_booking_id");
         if (existingId) {
           const res = await axiosSecure.get(`/api/bookings/${existingId}`);
@@ -51,10 +58,10 @@ export default function Payment() {
     createBooking();
   }, [state, navigate]);
 
-  const handlePayNowUI = () => {
-    // UI only — later call Stripe Checkout
-    alert("Payment UI only ✅ Next: Stripe integration.");
-    navigate("/dashboard/user"); // or navigate to success page
+  const handlePaid = () => {
+    // clear booking id so next booking can create new one
+    sessionStorage.removeItem("sd_booking_id");
+    navigate("/dashboard/user");
   };
 
   return (
@@ -63,7 +70,7 @@ export default function Payment() {
         <div className="card-body">
           <h1 className="text-3xl font-black">Payment</h1>
           <p className="opacity-70 mt-2">
-            Booking is created in DB. Next step: Stripe payment.
+            Pay securely using Stripe (test mode).
           </p>
 
           {creating && (
@@ -87,28 +94,21 @@ export default function Payment() {
 
                 <div className="mt-3 text-sm opacity-70">Venue</div>
                 <div className="font-semibold">{booking.venue}</div>
-              </div>
 
-              <div className="p-5 rounded-2xl border bg-base-200">
-                <div className="text-sm opacity-70">Total Amount</div>
-                <div className="text-4xl font-black mt-2">
+                <div className="mt-3 text-sm opacity-70">Amount</div>
+                <div className="text-3xl font-black mt-1">
                   {formatMoneyBDT(booking.price)}
                 </div>
+
                 <div className="mt-2 text-sm opacity-70">
                   Payment status: <b>{booking.paymentStatus}</b>
                 </div>
+              </div>
 
-                <button
-                  onClick={handlePayNowUI}
-                  className="btn btn-primary rounded-full w-full mt-5"
-                  disabled={creating}
-                >
-                  Pay Now (UI)
-                </button>
-
-                <p className="text-xs opacity-60 mt-3">
-                  Stripe checkout will be integrated here.
-                </p>
+              <div className="p-5 rounded-2xl border bg-base-200">
+                <Elements stripe={stripePromise}>
+                  <CheckoutForm booking={booking} onPaid={handlePaid} />
+                </Elements>
               </div>
             </div>
           )}
