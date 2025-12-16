@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Background -->
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="#7C3AED"/>
+
+  <!-- Icon: Stylized decor stand -->
+  <path
+    d="M18 42h28v4H18zM30 14h4v22h-4z"
+    fill="white"
+  />
+
+  <!-- Top ornament -->
+  <circle cx="32" cy="12" r="4" fill="white" />
+</svg>
