@@ -20,6 +20,10 @@ export default function UserDashboard() {
       const list = res.data?.data || [];
       setBookings(list);
       setActiveId(list?.[0]?._id || null);
+    } catch (e) {
+      console.error(e);
+      setBookings([]);
+      setActiveId(null);
     } finally {
       setLoading(false);
     }
