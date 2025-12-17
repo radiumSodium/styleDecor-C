@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axiosSecure from "../../api/axiosSecure";
+import useAuth from "../../auth/useAuth";
 
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
@@ -15,53 +16,108 @@ export default function Payment() {
   const { state } = useLocation();
   const navigate = useNavigate();
 
+  const { fbUser, authReady, loading } = useAuth();
+
   const [booking, setBooking] = useState(null);
   const [creating, setCreating] = useState(true);
   const [error, setError] = useState("");
 
+  // ✅ Prevent double-run in React StrictMode / rerenders
+  const didRunRef = useRef(false);
+
+  // ✅ booking key per user (different booking id for each user)
+  const bookingKey = useMemo(() => {
+    const uid = fbUser?.uid || "guest";
+    return `sd_booking_id_${uid}`;
+  }, [fbUser?.uid]);
+
   const stripePromise = useMemo(() => {
     const pk = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+    if (!pk) return null; // avoid runtime crash
     return loadStripe(pk);
   }, []);
 
   useEffect(() => {
-    if (!state?.serviceId) {
-      navigate("/services");
+    // ✅ wait for auth to be ready
+    if (!authReady || loading) return;
+
+    // ✅ require login for payment
+    if (!fbUser) {
+      navigate("/login", {
+        replace: true,
+        state: { from: { pathname: "/payment" } },
+      });
       return;
     }
 
-    const createBooking = async () => {
+    // ✅ require serviceId from route state
+    if (!state?.serviceId) {
+      navigate("/services", { replace: true });
+      return;
+    }
+
+    // ✅ prevent duplicate calls
+    if (didRunRef.current) return;
+    didRunRef.current = true;
+
+    const run = async () => {
       try {
         setCreating(true);
         setError("");
 
-        const existingId = sessionStorage.getItem("sd_booking_id");
+        // ✅ Try to reuse existing booking ONLY for this user
+        const existingId = sessionStorage.getItem(bookingKey);
+
         if (existingId) {
-          const res = await axiosSecure.get(`/api/bookings/${existingId}`);
-          setBooking(res.data?.data);
-          return;
+          try {
+            const res = await axiosSecure.get(`/api/bookings/${existingId}`);
+            const existing = res.data?.data;
+
+            // If already paid, don't reuse it. Clear and create a new booking.
+            if (existing?.paymentStatus === "paid") {
+              sessionStorage.removeItem(bookingKey);
+            } else {
+              setBooking(existing);
+              return;
+            }
+          } catch (e) {
+            // ✅ stale id or belongs to someone else → clear it and continue
+            const status = e?.response?.status;
+            if (status === 401 || status === 403 || status === 404) {
+              sessionStorage.removeItem(bookingKey);
+            } else {
+              throw e;
+            }
+          }
         }
 
+        // ✅ Create new booking
         const res = await axiosSecure.post("/api/bookings", state);
         const created = res.data?.data;
 
+        if (!created?._id) {
+          throw new Error("Booking creation failed (missing _id)");
+        }
+
         setBooking(created);
-        sessionStorage.setItem("sd_booking_id", created._id);
+        sessionStorage.setItem(bookingKey, created._id);
       } catch (e) {
         console.error(e);
-        setError(e?.response?.data?.message || "Booking create failed");
+        setError(
+          e?.response?.data?.message || e?.message || "Booking create failed"
+        );
       } finally {
         setCreating(false);
       }
     };
 
-    createBooking();
-  }, [state, navigate]);
+    run();
+  }, [authReady, loading, fbUser, state, navigate, bookingKey]);
 
   const handlePaid = () => {
-    // clear booking id so next booking can create new one
-    sessionStorage.removeItem("sd_booking_id");
-    navigate("/dashboard/user");
+    // ✅ clear only this user's booking key
+    sessionStorage.removeItem(bookingKey);
+    navigate("/dashboard/user", { replace: true });
   };
 
   return (
@@ -106,9 +162,16 @@ export default function Payment() {
               </div>
 
               <div className="p-5 rounded-2xl border bg-base-200">
-                <Elements stripe={stripePromise}>
-                  <CheckoutForm booking={booking} onPaid={handlePaid} />
-                </Elements>
+                {!stripePromise ? (
+                  <div className="alert alert-warning">
+                    Stripe publishable key missing. Set
+                    VITE_STRIPE_PUBLISHABLE_KEY.
+                  </div>
+                ) : (
+                  <Elements stripe={stripePromise}>
+                    <CheckoutForm booking={booking} onPaid={handlePaid} />
+                  </Elements>
+                )}
               </div>
             </div>
           )}

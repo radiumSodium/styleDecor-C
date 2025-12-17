@@ -15,28 +15,37 @@ const AuthContext = createContext(null);
 
 export default function AuthProvider({ children }) {
   const [fbUser, setFbUser] = useState(null);
-  const [dbUser, setDbUser] = useState(null); // role-based user from DB
+  const [dbUser, setDbUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
 
-  // Prevent repeated session calls for same uid (useful in StrictMode/dev)
+  // Prevent repeated session calls for same uid (StrictMode/dev)
   const lastSessionUidRef = useRef(null);
 
+  const clearUserSessionStorage = () => {
+    // remove any per-user booking keys
+    Object.keys(sessionStorage)
+      .filter((k) => k.startsWith("sd_booking_id_"))
+      .forEach((k) => sessionStorage.removeItem(k));
+  };
+
   const createSession = async (user) => {
+    // ✅ always clear old token before issuing a new one
+    localStorage.removeItem("sd_jwt");
+
     const idToken = await user.getIdToken(true);
 
     const res = await fetch(
       `${import.meta.env.VITE_API_URL}/api/auth/session`,
       {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${idToken}`,
-        },
+        headers: { Authorization: `Bearer ${idToken}` },
       }
     );
 
     const text = await res.text();
 
-    let data = null;
+    let data;
     try {
       data = JSON.parse(text);
     } catch {
@@ -56,7 +65,7 @@ export default function AuthProvider({ children }) {
     return data.user;
   };
 
-  // Handle Google redirect result once (safe; doesn't break email/pass flow)
+  // Safe to call; helps redirect sign-in finalize
   useEffect(() => {
     getRedirectResult(auth).catch(() => {});
   }, []);
@@ -67,15 +76,24 @@ export default function AuthProvider({ children }) {
       setFbUser(user || null);
 
       try {
+        // ✅ logged out
         if (!user) {
           localStorage.removeItem("sd_jwt");
           setDbUser(null);
           lastSessionUidRef.current = null;
+
+          clearUserSessionStorage();
+
+          setAuthReady(true);
           return;
         }
 
-        // Avoid hitting /session multiple times for same signed-in user
-        if (lastSessionUidRef.current === user.uid && dbUser) {
+        // ✅ already have correct session for this firebase user
+        const jwt = localStorage.getItem("sd_jwt");
+        const hasCorrectDbUser = dbUser?.uid && dbUser.uid === user.uid;
+
+        if (lastSessionUidRef.current === user.uid && jwt && hasCorrectDbUser) {
+          setAuthReady(true);
           return;
         }
 
@@ -88,19 +106,18 @@ export default function AuthProvider({ children }) {
         lastSessionUidRef.current = null;
       } finally {
         setLoading(false);
+        setAuthReady(true);
       }
     });
 
     return () => unsub();
-    // dbUser included so "avoid repeat" condition can work after first session
-  }, [dbUser]);
+  }, [dbUser]); // ✅ include dbUser so "hasCorrectDbUser" updates correctly
 
   const register = async ({ name, email, password, photoURL }) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     if (name || photoURL) {
       await updateProfile(cred.user, { displayName: name, photoURL });
     }
-    // session will be created by onAuthStateChanged
     return cred.user;
   };
 
@@ -109,10 +126,8 @@ export default function AuthProvider({ children }) {
     return cred.user;
   };
 
-  // ✅ Redirect-based Google login (no popup COOP warning)
   const googleLogin = async () => {
     const provider = new GoogleAuthProvider();
-    // optional: always prompt account selection
     provider.setCustomParameters({ prompt: "select_account" });
     await signInWithRedirect(auth, provider);
   };
@@ -121,20 +136,24 @@ export default function AuthProvider({ children }) {
     localStorage.removeItem("sd_jwt");
     setDbUser(null);
     lastSessionUidRef.current = null;
+
+    clearUserSessionStorage();
+
     await signOut(auth);
   };
 
   const value = useMemo(
     () => ({
       fbUser,
-      user: dbUser, // your DB user with role
+      user: dbUser,
       loading,
+      authReady,
       register,
       login,
       googleLogin,
       logout,
     }),
-    [fbUser, dbUser, loading]
+    [fbUser, dbUser, loading, authReady]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
