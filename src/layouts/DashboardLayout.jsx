@@ -125,40 +125,23 @@ export default function DashboardLayout() {
               </div>
             </div>
 
-            {/* Menu */}
-            <div className="p-3">
-              <ul className="menu gap-1">
-                {role === "user" && (
+            <ul className="menu gap-1">
+              {role === "user" && (
+                <li>
+                  <NavLink className={linkClass} to="/dashboard/user">
+                    User Dashboard
+                  </NavLink>
+                </li>
+              )}
+
+              {role === "admin" && (
+                <>
                   <li>
-                    <NavLink className={linkClass} to="/dashboard/user">
-                      User Dashboard
+                    <NavLink className={linkClass} to="/dashboard/admin">
+                      Admin Dashboard
                     </NavLink>
                   </li>
-                )}
 
-                {role === "admin" && (
-                  <>
-                    <li>
-                      <NavLink className={linkClass} to="/dashboard/admin">
-                        Admin Dashboard
-                      </NavLink>
-                    </li>
-                    <li>
-                      <NavLink className={linkClass} to="/dashboard/admin">
-                        Manage Services
-                      </NavLink>
-                    </li>
-                  </>
-                )}
-
-                {role === "decorator" && (
-                  <li>
-                    <NavLink className={linkClass} to="/dashboard/decorator">
-                      Decorator Dashboard
-                    </NavLink>
-                  </li>
-                )}
-                {(role === "admin" || role === "decorator") && (
                   <li>
                     <NavLink
                       className={linkClass}
@@ -167,9 +150,28 @@ export default function DashboardLayout() {
                       Create Service
                     </NavLink>
                   </li>
-                )}
-              </ul>
-            </div>
+                </>
+              )}
+
+              {role === "decorator" && (
+                <>
+                  <li>
+                    <NavLink className={linkClass} to="/dashboard/decorator">
+                      Decorator Dashboard
+                    </NavLink>
+                  </li>
+
+                  <li>
+                    <NavLink
+                      className={linkClass}
+                      to="/dashboard/create-service"
+                    >
+                      Create Service
+                    </NavLink>
+                  </li>
+                </>
+              )}
+            </ul>
 
             {/* Bottom area */}
             <div className="mt-auto p-4 border-t">

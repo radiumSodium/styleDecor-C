@@ -19,6 +19,9 @@ export default function AdminDashboard() {
   const [services, setServices] = useState([]);
   const [serviceLoading, setServiceLoading] = useState(false);
 
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
+
   // edit service modal
   const [editingService, setEditingService] = useState(null);
   const [svcForm, setSvcForm] = useState({
@@ -28,6 +31,9 @@ export default function AdminDashboard() {
     type: "onsite",
     image: "",
     description: "",
+    durationMins: 60,
+    tags: "", // comma separated
+    active: true,
   });
 
   const activeBooking = useMemo(
@@ -37,6 +43,8 @@ export default function AdminDashboard() {
 
   // ====== loaders ======
   const loadBookings = async () => {
+    setErr("");
+    setMsg("");
     const [bRes, dRes] = await Promise.all([
       axiosSecure.get("/api/bookings/all"),
       axiosSecure.get("/api/users?role=decorator"),
@@ -49,9 +57,13 @@ export default function AdminDashboard() {
 
   const loadUsers = async () => {
     setUserLoading(true);
+    setErr("");
+    setMsg("");
     try {
       const res = await axiosSecure.get("/api/users"); // all users
       setUsers(res.data?.data || []);
+    } catch (e) {
+      setErr(e?.response?.data?.message || "Failed to load users");
     } finally {
       setUserLoading(false);
     }
@@ -59,16 +71,19 @@ export default function AdminDashboard() {
 
   const loadServices = async () => {
     setServiceLoading(true);
+    setErr("");
+    setMsg("");
     try {
       const res = await axiosSecure.get("/api/services"); // all services
       setServices(res.data?.data || []);
+    } catch (e) {
+      setErr(e?.response?.data?.message || "Failed to load services");
     } finally {
       setServiceLoading(false);
     }
   };
 
   useEffect(() => {
-    // initial load of bookings (most common)
     loadBookings();
   }, []);
 
@@ -81,19 +96,35 @@ export default function AdminDashboard() {
   // ====== actions ======
   const assignBooking = async () => {
     if (!activeBooking) return;
-    await axiosSecure.patch(`/api/bookings/${activeBooking._id}/assign`, {
-      decoratorId: decoratorId || null,
-      team: team || "",
-    });
-    await loadBookings();
+    setErr("");
+    setMsg("");
+    try {
+      await axiosSecure.patch(`/api/bookings/${activeBooking._id}/assign`, {
+        decoratorId: decoratorId || null,
+        team: team || "",
+      });
+      setMsg("Assignment saved.");
+      await loadBookings();
+    } catch (e) {
+      setErr(e?.response?.data?.message || "Failed to assign booking");
+    }
   };
 
   const changeUserRole = async (userId, role) => {
-    await axiosSecure.patch(`/api/users/${userId}/role`, { role });
-    await loadUsers();
+    setErr("");
+    setMsg("");
+    try {
+      await axiosSecure.patch(`/api/users/${userId}/role`, { role });
+      setMsg("User role updated.");
+      await loadUsers();
+    } catch (e) {
+      setErr(e?.response?.data?.message || "Failed to change user role");
+    }
   };
 
   const openEditService = (s) => {
+    setErr("");
+    setMsg("");
     setEditingService(s);
     setSvcForm({
       title: s.title || s.serviceTitle || "",
@@ -102,76 +133,116 @@ export default function AdminDashboard() {
       type: s.type || "onsite",
       image: s.image || "",
       description: s.description || "",
+      durationMins: Number(s.durationMins || 60),
+      tags: Array.isArray(s.tags) ? s.tags.join(", ") : "",
+      active: s.active !== undefined ? Boolean(s.active) : true,
     });
     document.getElementById("svc_edit_modal")?.showModal?.();
   };
 
   const saveService = async () => {
     if (!editingService?._id) return;
-    await axiosSecure.patch(`/api/services/${editingService._id}`, svcForm);
-    setEditingService(null);
-    await loadServices();
+    setErr("");
+    setMsg("");
+    try {
+      const payload = {
+        title: svcForm.title.trim(),
+        price: Number(svcForm.price) || 0,
+        category: svcForm.category,
+        type: svcForm.type,
+        image: svcForm.image.trim(),
+        description: svcForm.description.trim(),
+        durationMins: Number(svcForm.durationMins) || 60,
+        tags: String(svcForm.tags || "")
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
+        active: Boolean(svcForm.active),
+      };
+
+      await axiosSecure.patch(`/api/services/${editingService._id}`, payload);
+
+      setEditingService(null);
+      document.getElementById("svc_edit_modal")?.close?.();
+      setMsg("Service updated.");
+      await loadServices();
+    } catch (e) {
+      setErr(e?.response?.data?.message || "Failed to update service");
+    }
   };
 
   const deleteService = async (id) => {
     const ok = confirm("Delete this service? This cannot be undone.");
     if (!ok) return;
-    await axiosSecure.delete(`/api/services/${id}`);
-    await loadServices();
+
+    setErr("");
+    setMsg("");
+    try {
+      await axiosSecure.delete(`/api/services/${id}`);
+      setMsg("Service deleted.");
+      await loadServices();
+    } catch (e) {
+      setErr(e?.response?.data?.message || "Failed to delete service");
+    }
+  };
+
+  const refreshActiveTab = async () => {
+    if (tab === "bookings") return loadBookings();
+    if (tab === "users") return loadUsers();
+    if (tab === "services") return loadServices();
   };
 
   return (
     <div className="min-h-screen bg-base-200">
-      {/* Top bar */}
-      {/* <div className="navbar bg-base-100 border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto w-full px-4 flex justify-between">
-          <div>
-            <div className="text-xl font-black">
-              Style<span className="text-primary">Decor</span> Admin
-            </div>
-            <div className="text-xs opacity-60">Control Panel</div>
+      {/* Tabs */}
+      <div className="max-w-7xl mx-auto px-4 pt-5">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="tabs tabs-boxed bg-base-100 border inline-flex">
+            <button
+              className={`tab ${tab === "bookings" ? "tab-active" : ""}`}
+              onClick={() => setTab("bookings")}
+            >
+              Bookings
+            </button>
+            <button
+              className={`tab ${tab === "users" ? "tab-active" : ""}`}
+              onClick={() => setTab("users")}
+            >
+              Users
+            </button>
+            <button
+              className={`tab ${tab === "services" ? "tab-active" : ""}`}
+              onClick={() => setTab("services")}
+            >
+              Services
+            </button>
           </div>
 
           <div className="flex gap-2">
-            <Link to="/" className="btn btn-ghost btn-sm">
-              Home
-            </Link>
             <button
-              onClick={() => {
-                if (tab === "bookings") loadBookings();
-                if (tab === "users") loadUsers();
-                if (tab === "services") loadServices();
-              }}
+              onClick={refreshActiveTab}
               className="btn btn-outline btn-sm"
             >
               Refresh
             </button>
+
+            {tab === "services" && (
+              <Link
+                to="/dashboard/create-service"
+                className="btn btn-primary btn-sm rounded-full"
+              >
+                + Create Service
+              </Link>
+            )}
           </div>
         </div>
-      </div> */}
 
-      {/* Tabs */}
-      <div className="max-w-7xl mx-auto px-4 pt-5">
-        <div className="tabs tabs-boxed bg-base-100 border inline-flex">
-          <button
-            className={`tab ${tab === "bookings" ? "tab-active" : ""}`}
-            onClick={() => setTab("bookings")}
-          >
-            Bookings
-          </button>
-          <button
-            className={`tab ${tab === "users" ? "tab-active" : ""}`}
-            onClick={() => setTab("users")}
-          >
-            Users
-          </button>
-          <button
-            className={`tab ${tab === "services" ? "tab-active" : ""}`}
-            onClick={() => setTab("services")}
-          >
-            Services
-          </button>
-        </div>
+        {(err || msg) && (
+          <div className="mt-4">
+            {err && <div className="alert alert-error">{err}</div>}
+            {msg && <div className="alert alert-success">{msg}</div>}
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -358,7 +429,7 @@ export default function AdminDashboard() {
                   </table>
                   <div className="text-xs opacity-60 mt-2">
                     Note: role changes require user to log out/in to refresh
-                    token (unless you rebuild JWT strategy).
+                    token.
                   </div>
                 </div>
               )}
@@ -369,10 +440,21 @@ export default function AdminDashboard() {
         {tab === "services" && (
           <div className="card bg-base-100 border">
             <div className="card-body">
-              <h2 className="text-2xl font-black">Service Management</h2>
-              <p className="opacity-70 mt-1">
-                View, edit and delete services stored in database.
-              </p>
+              <div className="flex items-end justify-between gap-3 flex-wrap">
+                <div>
+                  <h2 className="text-2xl font-black">Service Management</h2>
+                  <p className="opacity-70 mt-1">
+                    View, edit and delete services stored in database.
+                  </p>
+                </div>
+
+                <Link
+                  to="/dashboard/create-service"
+                  className="btn btn-primary btn-sm rounded-full"
+                >
+                  + Create Service
+                </Link>
+              </div>
 
               {serviceLoading ? (
                 <div className="mt-4 alert alert-info">Loading services...</div>
@@ -443,6 +525,7 @@ export default function AdminDashboard() {
                         setSvcForm((p) => ({ ...p, title: e.target.value }))
                       }
                     />
+
                     <input
                       className="input input-bordered"
                       type="number"
@@ -455,6 +538,20 @@ export default function AdminDashboard() {
                         }))
                       }
                     />
+
+                    <input
+                      className="input input-bordered"
+                      type="number"
+                      placeholder="Duration (mins)"
+                      value={svcForm.durationMins}
+                      onChange={(e) =>
+                        setSvcForm((p) => ({
+                          ...p,
+                          durationMins: Number(e.target.value),
+                        }))
+                      }
+                    />
+
                     <select
                       className="select select-bordered"
                       value={svcForm.category}
@@ -465,6 +562,7 @@ export default function AdminDashboard() {
                       <option value="home">home</option>
                       <option value="ceremony">ceremony</option>
                     </select>
+
                     <select
                       className="select select-bordered"
                       value={svcForm.type}
@@ -476,6 +574,7 @@ export default function AdminDashboard() {
                       <option value="studio">studio</option>
                       <option value="both">both</option>
                     </select>
+
                     <input
                       className="input input-bordered"
                       placeholder="Image URL"
@@ -484,6 +583,7 @@ export default function AdminDashboard() {
                         setSvcForm((p) => ({ ...p, image: e.target.value }))
                       }
                     />
+
                     <textarea
                       className="textarea textarea-bordered"
                       placeholder="Description"
@@ -495,6 +595,30 @@ export default function AdminDashboard() {
                         }))
                       }
                     />
+
+                    <input
+                      className="input input-bordered"
+                      placeholder="Tags (comma separated)"
+                      value={svcForm.tags}
+                      onChange={(e) =>
+                        setSvcForm((p) => ({ ...p, tags: e.target.value }))
+                      }
+                    />
+
+                    <label className="label cursor-pointer justify-start gap-3">
+                      <input
+                        type="checkbox"
+                        className="toggle toggle-primary"
+                        checked={svcForm.active}
+                        onChange={(e) =>
+                          setSvcForm((p) => ({
+                            ...p,
+                            active: e.target.checked,
+                          }))
+                        }
+                      />
+                      <span className="label-text">Active</span>
+                    </label>
                   </div>
 
                   <div className="modal-action">

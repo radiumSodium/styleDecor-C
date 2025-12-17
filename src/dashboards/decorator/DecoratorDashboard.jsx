@@ -141,6 +141,12 @@ export default function DecoratorDashboard() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2">
+            <Link
+              to="/dashboard/create-service"
+              className="btn btn-primary btn-sm rounded-full"
+            >
+              + Create Service
+            </Link>
             <input
               className="input input-bordered"
               placeholder="Search by service/venue/date..."
