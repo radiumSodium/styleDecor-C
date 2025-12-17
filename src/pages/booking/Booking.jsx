@@ -10,10 +10,7 @@ export default function Booking() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // From ServiceDetails navigate("/booking", { state: {...} })
   const draft = location.state;
-
-  // If user refreshes, state is lost → send back to services
   const ok = useMemo(() => !!draft?.serviceId, [draft]);
 
   const [customerName, setCustomerName] = useState("");
@@ -28,13 +25,13 @@ export default function Booking() {
 
   if (!ok) {
     return (
-      <div className="max-w-6xl mx-auto px-6 py-14">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         <div className="alert alert-warning">
           Booking data missing (page refresh clears route state). Please select
           a service again.
         </div>
         <div className="mt-6">
-          <Link to="/services" className="btn btn-primary">
+          <Link to="/services" className="btn btn-primary rounded-xl">
             Go to Services
           </Link>
         </div>
@@ -45,8 +42,6 @@ export default function Booking() {
   const handleProceedToPayment = () => {
     if (!canContinue) return;
 
-    // Later: POST booking to backend then navigate to payment with bookingId
-    // For now: just move to /payment with state
     navigate("/payment", {
       state: {
         ...draft,
@@ -58,26 +53,36 @@ export default function Booking() {
     });
   };
 
+  // ✅ one place to control label alignment everywhere
+  const Label = ({ children }) => (
+    <div className="label px-0 py-0 pb-2">{children}</div>
+  );
+
   return (
-    <div className="max-w-6xl mx-auto px-6 py-14">
-      <div className="flex items-end justify-between gap-4">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight">
             Confirm <span className="text-primary">Booking</span>
           </h1>
-          <p className="mt-3 opacity-70">
+          <p className="mt-2 sm:mt-3 opacity-70 max-w-2xl leading-relaxed">
             Review details, add venue/contact info, then proceed to payment.
           </p>
         </div>
-        <Link to="/services" className="btn btn-outline">
+
+        <Link
+          to="/services"
+          className="btn btn-outline rounded-xl w-full sm:w-auto"
+        >
           Back to Services
         </Link>
       </div>
 
-      <div className="mt-10 grid lg:grid-cols-3 gap-6">
+      <div className="mt-8 sm:mt-10 grid lg:grid-cols-3 gap-6 items-start">
         {/* Summary */}
         <div className="lg:col-span-1 card bg-base-100 border">
-          <div className="card-body">
+          <div className="card-body p-6 sm:p-7">
             <h2 className="text-xl font-bold">Booking Summary</h2>
 
             <div className="mt-4 rounded-2xl overflow-hidden border bg-base-200">
@@ -92,8 +97,10 @@ export default function Booking() {
             </div>
 
             <div className="mt-4">
-              <div className="font-bold">{draft.serviceTitle}</div>
-              <div className="opacity-70 text-sm mt-1">
+              <div className="font-bold text-lg leading-snug">
+                {draft.serviceTitle}
+              </div>
+              <div className="opacity-70 text-sm mt-1 capitalize">
                 {draft.category} • {draft.type}
               </div>
               <div className="opacity-70 text-sm">
@@ -101,23 +108,25 @@ export default function Booking() {
               </div>
             </div>
 
-            <div className="mt-4 p-4 rounded-2xl bg-base-200 border">
-              <div className="flex items-center justify-between">
+            <div className="mt-5 p-4 sm:p-5 rounded-2xl bg-base-200 border">
+              <div className="flex items-center justify-between gap-3">
                 <span className="opacity-70">Estimated total</span>
                 <span className="text-xl font-black">
                   {formatMoneyBDT(draft.price)}
                 </span>
               </div>
-              <p className="text-xs opacity-60 mt-2">
+              <p className="text-xs opacity-60 mt-2 leading-relaxed">
                 Final amount may change for custom add-ons (confirmed before
                 completion).
               </p>
             </div>
 
             {draft.notes ? (
-              <div className="mt-4 p-4 rounded-2xl border">
+              <div className="mt-5 p-4 sm:p-5 rounded-2xl border">
                 <div className="font-semibold">Notes</div>
-                <p className="text-sm opacity-70 mt-1">{draft.notes}</p>
+                <p className="text-sm opacity-70 mt-1 leading-relaxed">
+                  {draft.notes}
+                </p>
               </div>
             ) : null}
           </div>
@@ -125,16 +134,21 @@ export default function Booking() {
 
         {/* Form */}
         <div className="lg:col-span-2 card bg-base-100 border shadow-sm">
-          <div className="card-body">
+          <div className="card-body p-6 sm:p-7">
             <h2 className="text-2xl font-black">Your details</h2>
+            <p className="mt-2 text-sm opacity-70 leading-relaxed">
+              Provide contact and venue information. We’ll use this to confirm
+              the booking.
+            </p>
 
             <div className="mt-6 grid md:grid-cols-2 gap-4">
-              <label className="form-control">
-                <div className="label">
+              {/* Name */}
+              <label className="form-control w-full">
+                <Label>
                   <span className="label-text font-semibold">Name</span>
-                </div>
+                </Label>
                 <input
-                  className="input input-bordered"
+                  className="input input-bordered rounded-xl w-full"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Your full name"
@@ -142,12 +156,13 @@ export default function Booking() {
                 />
               </label>
 
-              <label className="form-control">
-                <div className="label">
+              {/* Phone */}
+              <label className="form-control w-full">
+                <Label>
                   <span className="label-text font-semibold">Phone</span>
-                </div>
+                </Label>
                 <input
-                  className="input input-bordered"
+                  className="input input-bordered rounded-xl w-full"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+8801XXXXXXXXX"
@@ -155,12 +170,13 @@ export default function Booking() {
                 />
               </label>
 
-              <label className="form-control md:col-span-2">
-                <div className="label">
+              {/* Venue */}
+              <label className="form-control w-full md:col-span-2">
+                <Label>
                   <span className="label-text font-semibold">Venue</span>
-                </div>
+                </Label>
                 <input
-                  className="input input-bordered"
+                  className="input input-bordered rounded-xl w-full"
                   value={venue}
                   onChange={(e) => setVenue(e.target.value)}
                   placeholder="Venue name / location"
@@ -168,25 +184,29 @@ export default function Booking() {
                 />
               </label>
 
+              {/* Address */}
               {draft.type !== "studio" && (
-                <label className="form-control md:col-span-2">
-                  <div className="label">
+                <label className="form-control w-full md:col-span-2">
+                  <Label>
                     <span className="label-text font-semibold">
                       Full Address
                     </span>
-                  </div>
+                  </Label>
                   <textarea
-                    className="textarea textarea-bordered"
+                    className="textarea textarea-bordered rounded-xl w-full"
                     rows={4}
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder="House, road, area, city + any parking/loading instruction"
                   />
+                  <div className="mt-2 text-xs opacity-60 leading-relaxed px-0">
+                    Tip: include nearby landmark + floor/lift info if needed.
+                  </div>
                 </label>
               )}
             </div>
 
-            <div className="mt-6 p-4 rounded-2xl border bg-base-200">
+            <div className="mt-6 p-4 sm:p-5 rounded-2xl border bg-base-200">
               <label className="cursor-pointer flex items-start gap-3">
                 <input
                   type="checkbox"
@@ -194,32 +214,34 @@ export default function Booking() {
                   checked={agree}
                   onChange={(e) => setAgree(e.target.checked)}
                 />
-                <span className="text-sm opacity-80">
+                <span className="text-sm opacity-80 leading-relaxed">
                   I confirm the date & time. I understand onsite service needs
                   access & setup time.
                 </span>
               </label>
             </div>
 
-            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-end">
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Link
                 to={`/services/${draft.serviceId}`}
-                className="btn btn-outline rounded-full"
+                className="btn btn-outline rounded-xl w-full"
               >
                 Edit Selection
               </Link>
+
               <button
                 onClick={handleProceedToPayment}
                 disabled={!canContinue}
-                className="btn btn-primary rounded-full"
+                className="btn btn-primary rounded-xl w-full"
               >
                 Proceed to Payment
               </button>
             </div>
 
             {!canContinue && (
-              <p className="text-sm opacity-70 mt-3">
-                Fill name, phone, venue and accept confirmation to continue.
+              <p className="text-sm opacity-70 mt-3 leading-relaxed">
+                Fill <b>name</b>, <b>phone</b>, <b>venue</b> and accept
+                confirmation to continue.
               </p>
             )}
           </div>

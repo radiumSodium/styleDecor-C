@@ -27,7 +27,6 @@ export default function ServiceDetails() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  // booking UI state (later will go to DB)
   const [date, setDate] = useState("");
   const [slot, setSlot] = useState("");
   const [notes, setNotes] = useState("");
@@ -58,7 +57,6 @@ export default function ServiceDetails() {
   const handleContinue = () => {
     if (!canContinue) return;
 
-    // For now: pass booking draft via state (later create booking in DB)
     navigate("/booking", {
       state: {
         serviceId: service?._id,
@@ -76,7 +74,7 @@ export default function ServiceDetails() {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto px-6 py-14">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         <div className="h-10 w-1/2 bg-base-200 rounded animate-pulse" />
         <div className="mt-6 grid lg:grid-cols-2 gap-8">
           <div className="h-80 bg-base-200 rounded-2xl animate-pulse" />
@@ -93,10 +91,10 @@ export default function ServiceDetails() {
 
   if (err || !service) {
     return (
-      <div className="max-w-6xl mx-auto px-6 py-14">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         <div className="alert alert-error">{err || "Service not found"}</div>
         <div className="mt-6">
-          <Link to="/services" className="btn btn-outline">
+          <Link to="/services" className="btn btn-outline rounded-xl">
             Back to Services
           </Link>
         </div>
@@ -108,19 +106,25 @@ export default function ServiceDetails() {
     <div>
       {/* Header */}
       <section className="bg-[#f6e6dc]">
-        <div className="max-w-6xl mx-auto px-6 py-10 lg:py-14">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 lg:py-14">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div>
               <h1 className="text-3xl md:text-5xl font-black tracking-tight">
                 {service.title}
               </h1>
-              <p className="mt-3 opacity-80 max-w-2xl">
+
+              <p className="mt-3 opacity-80 max-w-2xl leading-relaxed">
                 {service.description ||
                   "Premium decoration package for your event."}
               </p>
+
               <div className="mt-4 flex flex-wrap gap-2">
-                <span className="badge badge-outline">{service.category}</span>
-                <span className="badge badge-outline">{service.type}</span>
+                <span className="badge badge-outline capitalize">
+                  {service.category}
+                </span>
+                <span className="badge badge-outline capitalize">
+                  {service.type}
+                </span>
                 {(service.tags || []).slice(0, 6).map((t) => (
                   <span key={t} className="badge badge-ghost">
                     {t}
@@ -129,26 +133,34 @@ export default function ServiceDetails() {
               </div>
             </div>
 
-            <div className="text-right">
-              <div className="text-sm opacity-70">Starting from</div>
-              <div className="text-3xl font-black">
-                {formatMoneyBDT(service.price)}
-              </div>
-              <div className="text-sm opacity-70">
-                Duration:{" "}
-                {service.durationMins ? `${service.durationMins} mins` : "—"}
+            {/* price box aligned nicely */}
+            <div className="md:text-right">
+              <div className="inline-block rounded-2xl border bg-base-100/60 backdrop-blur px-5 py-4">
+                <div className="text-sm opacity-70">Starting from</div>
+                <div className="text-3xl font-black leading-tight">
+                  {formatMoneyBDT(service.price)}
+                </div>
+                <div className="text-sm opacity-70 mt-1">
+                  Duration:{" "}
+                  <span className="font-semibold">
+                    {service.durationMins
+                      ? `${service.durationMins} mins`
+                      : "—"}
+                  </span>
+                </div>
               </div>
             </div>
+            {/* end price box */}
           </div>
         </div>
       </section>
 
       {/* Details + Booking */}
-      <section className="max-w-6xl mx-auto px-6 py-12">
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left: image + details */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
+        <div className="grid lg:grid-cols-2 gap-8 items-start">
+          {/* Left */}
           <div className="card bg-base-100 border overflow-hidden">
-            <figure className="h-80 bg-base-200">
+            <figure className="h-72 sm:h-80 bg-base-200">
               <img
                 className="h-full w-full object-cover"
                 src={
@@ -158,18 +170,19 @@ export default function ServiceDetails() {
                 alt={service.title}
               />
             </figure>
-            <div className="card-body">
+
+            <div className="card-body p-6 sm:p-7">
               <h2 className="text-xl font-bold">What’s included</h2>
-              <ul className="mt-2 list-disc pl-5 opacity-80 space-y-1">
+              <ul className="mt-3 list-disc pl-5 opacity-80 space-y-1">
                 <li>Theme planning & layout</li>
                 <li>Props, setup and styling</li>
                 <li>Lighting / floral (based on package)</li>
                 <li>Team coordination (onsite)</li>
               </ul>
 
-              <div className="mt-5 p-4 rounded-2xl bg-base-200 border">
+              <div className="mt-6 p-4 sm:p-5 rounded-2xl bg-base-200 border">
                 <div className="font-semibold">Notes</div>
-                <p className="opacity-80 text-sm mt-1">
+                <p className="opacity-80 text-sm mt-1 leading-relaxed">
                   Exact materials and setup depend on your venue and theme
                   preference. You can add custom notes while booking.
                 </p>
@@ -177,35 +190,36 @@ export default function ServiceDetails() {
             </div>
           </div>
 
-          {/* Right: booking card */}
+          {/* Right */}
           <div className="card bg-base-100 border shadow-sm">
-            <div className="card-body">
+            <div className="card-body p-6 sm:p-7">
               <h2 className="text-2xl font-black">Book this service</h2>
-              <p className="opacity-70 mt-1">
+              <p className="opacity-70 mt-2 leading-relaxed">
                 Select a date and time slot. We’ll confirm availability and
                 proceed to payment.
               </p>
 
-              <div className="mt-6 space-y-4">
+              {/* ✅ unified spacing block */}
+              <div className="mt-6 grid gap-5">
                 {/* Date */}
                 <label className="form-control w-full">
-                  <div className="label">
+                  <div className="label py-0 pb-2">
                     <span className="label-text font-semibold">
                       Select date
                     </span>
                   </div>
                   <input
                     type="date"
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-full rounded-xl"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                   />
                 </label>
 
                 {/* Slot */}
-                <div>
+                <div className="rounded-2xl border p-4 sm:p-5">
                   <div className="font-semibold">Select time slot</div>
-                  <div className="mt-3 grid grid-cols-3 gap-2">
+                  <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {TIME_SLOTS.map((t) => {
                       const active = slot === t;
                       return (
@@ -226,33 +240,39 @@ export default function ServiceDetails() {
 
                 {/* Notes */}
                 <label className="form-control w-full">
-                  <div className="label">
+                  <div className="label py-0 pb-2">
                     <span className="label-text font-semibold">
                       Special notes (optional)
                     </span>
                   </div>
                   <textarea
-                    className="textarea textarea-bordered w-full"
+                    className="textarea textarea-bordered w-full rounded-xl"
                     rows={4}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Venue details, theme color, reference link..."
                   />
+                  <div className="mt-2 text-xs opacity-60 leading-relaxed">
+                    Tip: mention your venue size, preferred colors, and any
+                    reference photos/links.
+                  </div>
                 </label>
 
-                <div className="p-4 rounded-2xl bg-base-200 border">
-                  <div className="flex items-center justify-between">
+                {/* Total */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-base-200 border">
+                  <div className="flex items-center justify-between gap-3">
                     <span className="opacity-70">Estimated total</span>
                     <span className="text-xl font-black">
                       {formatMoneyBDT(service.price)}
                     </span>
                   </div>
-                  <p className="text-xs opacity-60 mt-1">
+                  <p className="text-xs opacity-60 mt-2 leading-relaxed">
                     Final cost may vary for custom add-ons (we’ll confirm before
                     completion).
                   </p>
                 </div>
 
+                {/* Actions */}
                 <button
                   onClick={handleContinue}
                   disabled={!canContinue}
@@ -261,17 +281,11 @@ export default function ServiceDetails() {
                   Continue to Booking
                 </button>
 
-                <div className="flex gap-2">
-                  <Link
-                    to="/services"
-                    className="btn btn-outline w-1/2 rounded-xl"
-                  >
+                <div className="grid grid-cols-2 gap-2">
+                  <Link to="/services" className="btn btn-outline rounded-xl">
                     Back
                   </Link>
-                  <Link
-                    to="/coverage"
-                    className="btn btn-outline w-1/2 rounded-xl"
-                  >
+                  <Link to="/coverage" className="btn btn-outline rounded-xl">
                     Coverage
                   </Link>
                 </div>
@@ -282,6 +296,7 @@ export default function ServiceDetails() {
                   </div>
                 )}
               </div>
+              {/* end unified spacing */}
             </div>
           </div>
         </div>

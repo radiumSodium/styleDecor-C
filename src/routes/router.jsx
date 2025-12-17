@@ -32,12 +32,40 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: Home },
       { path: "services", Component: Services },
-      { path: "services/:id", Component: ServiceDetails },
+
+      // ✅ PROTECTED: service details
+      {
+        path: "services/:id",
+        Component: () => (
+          <RequireAuth>
+            <ServiceDetails />
+          </RequireAuth>
+        ),
+      },
+
       { path: "coverage", Component: CoverageMapPage },
       { path: "about", Component: About },
       { path: "contact", Component: Contact },
-      { path: "booking", Component: Booking },
-      { path: "payment", Component: Payment },
+
+      // ✅ PROTECTED: booking
+      {
+        path: "booking",
+        Component: () => (
+          <RequireAuth>
+            <Booking />
+          </RequireAuth>
+        ),
+      },
+
+      // ✅ PROTECTED: payment
+      {
+        path: "payment",
+        Component: () => (
+          <RequireAuth>
+            <Payment />
+          </RequireAuth>
+        ),
+      },
 
       {
         Component: AuthLayout,
@@ -48,6 +76,8 @@ export const router = createBrowserRouter([
       },
     ],
   },
+
+  // ✅ PROTECTED: entire dashboard already protected here
   {
     path: "/dashboard",
     Component: () => (
@@ -80,7 +110,16 @@ export const router = createBrowserRouter([
           </RequireRole>
         ),
       },
-      { path: "create-service", element: <CreateService /> },
+
+      // ✅ PROTECTED: only admin/decorator can create service
+      {
+        path: "create-service",
+        Component: () => (
+          <RequireRole allow={["admin", "decorator"]}>
+            <CreateService />
+          </RequireRole>
+        ),
+      },
     ],
   },
 ]);
