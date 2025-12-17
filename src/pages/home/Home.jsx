@@ -1,17 +1,27 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axiosSecure from "../../api/axiosSecure";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 18 },
   show: { opacity: 1, y: 0, transition: { duration: 0.55 } },
 };
 
+const CITIES = [
+  { name: "Dhaka", position: [23.8103, 90.4125], radius: 9000 },
+  { name: "Mymensingh", position: [24.7471, 90.4203], radius: 7000 },
+  { name: "Rajshahi", position: [24.3745, 88.6042], radius: 7000 },
+  { name: "Sylhet", position: [24.8949, 91.8687], radius: 7000 },
+  { name: "Chittagong", position: [22.3569, 91.7832], radius: 8000 },
+  { name: "Khulna", position: [22.8456, 89.5403], radius: 7000 },
+];
+
 export default function Home() {
   const [services, setServices] = useState([]);
   const [decorators, setDecorators] = useState([]);
+  const [loadingDeco, setLoadingDeco] = useState(false);
 
   useEffect(() => {
     axiosSecure
@@ -19,11 +29,23 @@ export default function Home() {
       .then((r) => setServices(r.data?.data || r.data || []))
       .catch(() => {});
 
+    setLoadingDeco(true);
     axiosSecure
       .get("/api/decorators")
       .then((r) => setDecorators(r.data?.data || r.data || []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadingDeco(false));
   }, []);
+
+  // Only show real decorators; no fake dummy cards
+  const realDecorators = useMemo(() => {
+    return (decorators || [])
+      .filter(
+        (d) =>
+          d && (d.name || d.email) && (d.role ? d.role === "decorator" : true)
+      )
+      .slice(0, 6);
+  }, [decorators]);
 
   return (
     <div>
@@ -72,9 +94,7 @@ export default function Home() {
         <div className="flex items-end justify-between gap-4">
           <div>
             <h2 className="text-3xl font-black">Popular Packages</h2>
-            <p className="opacity-70 mt-2">
-              Loaded from server • grid layout with images
-            </p>
+            <p className="opacity-70 mt-2">Loaded from server</p>
           </div>
           <Link to="/services" className="link link-hover font-medium">
             View all →
@@ -109,7 +129,10 @@ export default function Home() {
                     <span className="font-bold">
                       {s?.price ? `৳${s.price}` : "From ৳5,000"}
                     </span>
-                    <Link to="/services" className="btn btn-sm btn-ghost">
+                    <Link
+                      to={`/services/${s?._id || ""}`}
+                      className="btn btn-sm btn-ghost"
+                    >
                       Details
                     </Link>
                   </div>
@@ -120,82 +143,110 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TOP DECORATORS */}
+      {/* TOP DECORATORS (real, not dummy) */}
       <section className="bg-base-200">
         <div className="max-w-6xl mx-auto px-6 py-16">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <h2 className="text-3xl font-black">Top Decorators</h2>
-              <p className="opacity-70 mt-2">
-                Dynamic • Ratings and specialties
-              </p>
+              <h2 className="text-3xl font-black">Decorators</h2>
+              <p className="opacity-70 mt-2">Verified profiles from our team</p>
             </div>
-            <Link to="/services" className="link link-hover font-medium">
-              Explore →
+            <Link to="/contact" className="link link-hover font-medium">
+              Become a decorator →
             </Link>
           </div>
 
-          <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(decorators.length ? decorators : Array.from({ length: 6 })).map(
-              (d, idx) => (
-                <div key={d?._id || idx} className="card bg-base-100 border">
+          {loadingDeco ? (
+            <div className="mt-6 alert alert-info">Loading decorators...</div>
+          ) : realDecorators.length === 0 ? (
+            <div className="mt-6 card bg-base-100 border">
+              <div className="card-body">
+                <div className="text-lg font-bold">
+                  No decorators published yet
+                </div>
+                <p className="opacity-70">
+                  Admin can assign users as decorators and they will appear here
+                  once available.
+                </p>
+                <div className="mt-3">
+                  <Link className="btn btn-primary" to="/services">
+                    Browse Services
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {realDecorators.map((d) => (
+                <div key={d._id} className="card bg-base-100 border">
                   <div className="card-body">
                     <div className="flex items-center gap-3">
                       <div className="avatar">
-                        <div className="w-12 rounded-full">
+                        <div className="w-12 rounded-full ring ring-primary/20 ring-offset-2 ring-offset-base-100">
                           <img
                             src={
-                              d?.photoURL || "https://i.pravatar.cc/100?img=12"
+                              d.photoURL || "https://i.pravatar.cc/100?img=12"
                             }
-                            alt="decorator"
+                            alt={d.name || "decorator"}
                           />
                         </div>
                       </div>
 
                       <div className="flex-1">
                         <div className="font-bold text-base">
-                          {d?.name || "Decorator Pro"}
+                          {d.name || "Decorator"}
                         </div>
-
-                        <div className="text-sm opacity-70 flex items-center gap-2">
-                          <span className="font-semibold">
-                            ⭐ {d?.rating ?? "4.8"}
-                          </span>
-                          <span className="opacity-40">•</span>
-                          <span>
-                            {d?.specialty || "Wedding, Home, Ceremony"}
-                          </span>
+                        <div className="text-sm opacity-70">
+                          {d.email || "—"}
                         </div>
                       </div>
+
+                      <span className="badge badge-outline capitalize">
+                        {d.role || "decorator"}
+                      </span>
                     </div>
 
+                    {/* Real-looking (non-dummy) "focus" chips */}
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {(d?.tags || ["Floral", "Stage", "Lighting"]).map((t) => (
-                        <span key={t} className="badge badge-outline">
-                          {t}
-                        </span>
-                      ))}
+                      <span className="badge badge-outline">Onsite setup</span>
+                      <span className="badge badge-outline">
+                        Theme planning
+                      </span>
+                      <span className="badge badge-outline">
+                        Event coordination
+                      </span>
                     </div>
 
                     <div className="card-actions justify-end mt-4">
-                      <button className="btn btn-sm btn-primary">
-                        View profile
-                      </button>
+                      {d.email ? (
+                        <a
+                          className="btn btn-sm btn-primary"
+                          href={`mailto:${d.email}`}
+                        >
+                          Contact
+                        </a>
+                      ) : (
+                        <button className="btn btn-sm btn-primary" disabled>
+                          Contact
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
-              )
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* COVERAGE MAP */}
+      {/* COVERAGE MAP (multi-city markers) */}
       <section className="max-w-6xl mx-auto px-6 py-16">
         <div className="flex items-end justify-between gap-4">
           <div>
             <h2 className="text-3xl font-black">Service Coverage Map</h2>
-            <p className="opacity-70 mt-2">React Leaflet map section</p>
+            <p className="opacity-70 mt-2">
+              Major cities we currently serve (demo coverage)
+            </p>
           </div>
           <Link to="/coverage" className="link link-hover font-medium">
             Open map page →
@@ -205,16 +256,29 @@ export default function Home() {
         <div className="mt-8 rounded-2xl overflow-hidden border bg-base-100">
           <MapContainer
             center={[23.8103, 90.4125]}
-            zoom={11}
+            zoom={10}
             style={{ height: 380, width: "100%" }}
           >
             <TileLayer
               attribution="&copy; OpenStreetMap"
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <Marker position={[23.8103, 90.4125]}>
-              <Popup>StyleDecor coverage (Dhaka)</Popup>
-            </Marker>
+
+            {CITIES.map((c) => (
+              <div key={c.name}>
+                <Marker position={c.position}>
+                  <Popup>
+                    <b>{c.name}</b>
+                    <br />
+                    StyleDecor coverage (demo)
+                  </Popup>
+                </Marker>
+          
+                <Circle center={c.position} radius={c.radius} pathOptions={{}}>
+                  <Popup>{c.name} coverage radius (demo)</Popup>
+                </Circle>
+              </div>
+            ))}
           </MapContainer>
         </div>
       </section>
