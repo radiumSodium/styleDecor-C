@@ -6,6 +6,11 @@ function formatMoneyBDT(n) {
   return `৳${n.toLocaleString("en-BD")}`;
 }
 
+// ✅ Declare helper component OUTSIDE render (prevents "Cannot create components during render")
+function Label({ children }) {
+  return <div className="label px-0 py-0 pb-2">{children}</div>;
+}
+
 export default function Booking() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -52,11 +57,6 @@ export default function Booking() {
       },
     });
   };
-
-  // ✅ one place to control label alignment everywhere
-  const Label = ({ children }) => (
-    <div className="label px-0 py-0 pb-2">{children}</div>
-  );
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
@@ -199,7 +199,7 @@ export default function Booking() {
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder="House, road, area, city + any parking/loading instruction"
                   />
-                  <div className="mt-2 text-xs opacity-60 leading-relaxed px-0">
+                  <div className="mt-2 text-xs opacity-60 leading-relaxed">
                     Tip: include nearby landmark + floor/lift info if needed.
                   </div>
                 </label>

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import axiosSecure from "../../api/axiosSecure";
 import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
+import DecoratorsSection from "./DecoratorsSection";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 18 },
@@ -143,101 +144,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TOP DECORATORS (real, not dummy) */}
-      <section className="bg-base-200">
-        <div className="max-w-6xl mx-auto px-6 py-16">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <h2 className="text-3xl font-black">Decorators</h2>
-              <p className="opacity-70 mt-2">Verified profiles from our team</p>
-            </div>
-            <Link to="/contact" className="link link-hover font-medium">
-              Become a decorator →
-            </Link>
-          </div>
-
-          {loadingDeco ? (
-            <div className="mt-6 alert alert-info">Loading decorators...</div>
-          ) : realDecorators.length === 0 ? (
-            <div className="mt-6 card bg-base-100 border">
-              <div className="card-body">
-                <div className="text-lg font-bold">
-                  No decorators published yet
-                </div>
-                <p className="opacity-70">
-                  Admin can assign users as decorators and they will appear here
-                  once available.
-                </p>
-                <div className="mt-3">
-                  <Link className="btn btn-primary" to="/services">
-                    Browse Services
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {realDecorators.map((d) => (
-                <div key={d._id} className="card bg-base-100 border">
-                  <div className="card-body">
-                    <div className="flex items-center gap-3">
-                      <div className="avatar">
-                        <div className="w-12 rounded-full ring ring-primary/20 ring-offset-2 ring-offset-base-100">
-                          <img
-                            src={
-                              d.photoURL || "https://i.pravatar.cc/100?img=12"
-                            }
-                            alt={d.name || "decorator"}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex-1">
-                        <div className="font-bold text-base">
-                          {d.name || "Decorator"}
-                        </div>
-                        <div className="text-sm opacity-70">
-                          {d.email || "—"}
-                        </div>
-                      </div>
-
-                      <span className="badge badge-outline capitalize">
-                        {d.role || "decorator"}
-                      </span>
-                    </div>
-
-                    {/* Real-looking (non-dummy) "focus" chips */}
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <span className="badge badge-outline">Onsite setup</span>
-                      <span className="badge badge-outline">
-                        Theme planning
-                      </span>
-                      <span className="badge badge-outline">
-                        Event coordination
-                      </span>
-                    </div>
-
-                    <div className="card-actions justify-end mt-4">
-                      {d.email ? (
-                        <a
-                          className="btn btn-sm btn-primary"
-                          href={`mailto:${d.email}`}
-                        >
-                          Contact
-                        </a>
-                      ) : (
-                        <button className="btn btn-sm btn-primary" disabled>
-                          Contact
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+      {/* Top Decorator  */}
+      <DecoratorsSection></DecoratorsSection>
 
       {/* COVERAGE MAP (multi-city markers) */}
       <section className="max-w-6xl mx-auto px-6 py-16">
@@ -273,7 +181,7 @@ export default function Home() {
                     StyleDecor coverage (demo)
                   </Popup>
                 </Marker>
-          
+
                 <Circle center={c.position} radius={c.radius} pathOptions={{}}>
                   <Popup>{c.name} coverage radius (demo)</Popup>
                 </Circle>
