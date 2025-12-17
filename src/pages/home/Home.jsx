@@ -145,7 +145,7 @@ export default function Home() {
       </section>
 
       {/* Top Decorator  */}
-      <DecoratorsSection></DecoratorsSection>
+      <DecoratorsSection loading={loadingDeco} decorators={realDecorators} />
 
       {/* COVERAGE MAP (multi-city markers) */}
       <section className="max-w-6xl mx-auto px-6 py-16">
