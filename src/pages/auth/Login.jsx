@@ -15,7 +15,7 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState("");
 
-  // ✅ Redirect when db user is ready
+  // Redirect once auth + DB role is ready
   useEffect(() => {
     if (!authReady) return;
     if (!loading && user?.role) {
@@ -29,7 +29,6 @@ export default function Login() {
     setSubmitting(true);
     try {
       await login({ email, password });
-      // ✅ no manual navigate here
     } catch (error) {
       setErr(error?.message || "Login failed");
     } finally {
@@ -41,7 +40,7 @@ export default function Login() {
     setErr("");
     setSubmitting(true);
     try {
-      await googleLogin();
+      await googleLogin(); // now returns, no redirect
     } catch (error) {
       setErr(error?.message || "Google login failed");
     } finally {
@@ -50,18 +49,26 @@ export default function Login() {
   };
 
   return (
-    <>
-      <h2 className="text-2xl font-black">Login</h2>
+    <div className="space-y-5">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-black">Login</h2>
+        <p className="text-sm opacity-70 mt-1">
+          Access your dashboard based on your role
+        </p>
+      </div>
 
-      {err && <div className="alert alert-error mt-3">{err}</div>}
+      {/* Error */}
+      {err && <div className="alert alert-error">{err}</div>}
 
-      <form onSubmit={handleEmailLogin} className="mt-4 space-y-3">
+      {/* Email login */}
+      <form onSubmit={handleEmailLogin} className="space-y-4">
         <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">Email</span>
+          <div className="label pb-1">
+            <span className="label-text font-medium">Email</span>
           </div>
           <input
-            className="input input-bordered w-full"
+            className="input input-bordered w-full h-12 rounded-xl"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -71,11 +78,11 @@ export default function Login() {
         </label>
 
         <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">Password</span>
+          <div className="label pb-1">
+            <span className="label-text font-medium">Password</span>
           </div>
           <input
-            className="input input-bordered w-full"
+            className="input input-bordered w-full h-12 rounded-xl"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -84,27 +91,34 @@ export default function Login() {
           />
         </label>
 
-        <button className="btn btn-primary w-full" disabled={submitting}>
+        {/* Login button – padding fixed */}
+        <button
+          className="btn btn-primary w-full h-12 rounded-xl mt-2"
+          disabled={submitting}
+        >
           {submitting ? "Logging in..." : "Login"}
         </button>
       </form>
 
-      <div className="divider">OR</div>
+      {/* Divider */}
+      <div className="divider my-2">OR</div>
 
+      {/* Google login */}
       <button
         onClick={handleGoogle}
-        className="btn btn-outline w-full"
+        className="btn btn-outline w-full h-12 rounded-xl"
         disabled={submitting}
       >
         Continue with Google
       </button>
 
-      <p className="mt-4 text-sm opacity-70">
+      {/* Register link (kept minimal, no quick links) */}
+      <p className="text-sm opacity-70 text-center">
         New here?{" "}
-        <Link className="link link-primary" to="/register">
+        <Link className="link link-primary font-medium" to="/register">
           Create account
         </Link>
       </p>
-    </>
+    </div>
   );
 }

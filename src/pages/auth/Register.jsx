@@ -15,7 +15,7 @@ export default function Register() {
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState("");
 
-  // ✅ Redirect when dbUser is ready
+  // Redirect when dbUser is ready
   useEffect(() => {
     if (!authReady) return;
     if (!loading && user?.role) {
@@ -29,7 +29,6 @@ export default function Register() {
     setSubmitting(true);
     try {
       await register({ name, email, password, photoURL });
-      // ✅ no navigate here
     } catch (error) {
       setErr(error?.message || "Registration failed");
     } finally {
@@ -50,87 +49,105 @@ export default function Register() {
   };
 
   return (
-    <>
-      <h2 className="text-2xl font-black">Create your account</h2>
-      <p className="opacity-70">
-        New accounts start as <span className="font-semibold">User</span>. Admin
-        can assign Decorator/Admin later.
-      </p>
+    <div className="space-y-5">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-black">Create your account</h2>
+        <p className="text-sm opacity-70 mt-1">
+          New accounts start as <span className="font-semibold">User</span>.
+          Admin can assign Decorator/Admin later.
+        </p>
+      </div>
 
-      {err && <div className="alert alert-error mt-3">{err}</div>}
+      {/* Error */}
+      {err && <div className="alert alert-error">{err}</div>}
 
-      <form onSubmit={handleRegister} className="mt-4 space-y-3">
+      {/* Form */}
+      <form onSubmit={handleRegister} className="space-y-4">
         <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">Full name</span>
+          <div className="label pb-1">
+            <span className="label-text font-medium">Full name</span>
           </div>
           <input
-            className="input input-bordered w-full"
+            className="input input-bordered w-full h-12 rounded-xl"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            placeholder="Your full name"
             required
           />
         </label>
 
         <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">Profile photo URL (optional)</span>
+          <div className="label pb-1">
+            <span className="label-text font-medium">
+              Profile photo URL (optional)
+            </span>
           </div>
           <input
-            className="input input-bordered w-full"
+            className="input input-bordered w-full h-12 rounded-xl"
             value={photoURL}
             onChange={(e) => setPhotoURL(e.target.value)}
+            placeholder="https://..."
           />
         </label>
 
         <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">Email</span>
+          <div className="label pb-1">
+            <span className="label-text font-medium">Email</span>
           </div>
           <input
-            className="input input-bordered w-full"
+            className="input input-bordered w-full h-12 rounded-xl"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@email.com"
             required
           />
         </label>
 
         <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">Password</span>
+          <div className="label pb-1">
+            <span className="label-text font-medium">Password</span>
           </div>
           <input
-            className="input input-bordered w-full"
+            className="input input-bordered w-full h-12 rounded-xl"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            placeholder="Minimum 6 characters"
             minLength={6}
             required
           />
         </label>
 
-        <button className="btn btn-primary w-full" disabled={submitting}>
+        {/* Register button – padding fixed */}
+        <button
+          className="btn btn-primary w-full h-12 rounded-xl mt-2"
+          disabled={submitting}
+        >
           {submitting ? "Creating..." : "Register"}
         </button>
       </form>
 
-      <div className="divider">OR</div>
+      {/* Divider */}
+      <div className="divider my-2">OR</div>
 
+      {/* Google button */}
       <button
         onClick={handleGoogle}
-        className="btn btn-outline w-full"
+        className="btn btn-outline w-full h-12 rounded-xl"
         disabled={submitting}
       >
         Continue with Google
       </button>
 
-      <p className="mt-4 text-sm opacity-70">
+      {/* Footer link */}
+      <p className="text-sm opacity-70 text-center">
         Already have an account?{" "}
-        <Link className="link link-primary" to="/login">
+        <Link className="link link-primary font-medium" to="/login">
           Login
         </Link>
       </p>
-    </>
+    </div>
   );
 }
