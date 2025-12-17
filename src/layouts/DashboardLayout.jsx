@@ -144,7 +144,7 @@ export default function DashboardLayout() {
                       </NavLink>
                     </li>
                     <li>
-                      <NavLink className={linkClass} to="/services">
+                      <NavLink className={linkClass} to="/dashboard/admin">
                         Manage Services
                       </NavLink>
                     </li>
@@ -155,6 +155,16 @@ export default function DashboardLayout() {
                   <li>
                     <NavLink className={linkClass} to="/dashboard/decorator">
                       Decorator Dashboard
+                    </NavLink>
+                  </li>
+                )}
+                {(role === "admin" || role === "decorator") && (
+                  <li>
+                    <NavLink
+                      className={linkClass}
+                      to="/dashboard/create-service"
+                    >
+                      Create Service
                     </NavLink>
                   </li>
                 )}

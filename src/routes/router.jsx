@@ -22,6 +22,7 @@ import DecoratorDashboard from "../dashboards/decorator/DecoratorDashboard";
 
 import RequireAuth from "../auth/RequireAuth";
 import RequireRole from "../auth/RequireRole";
+import CreateService from "../pages/dashboard/CreateServices";
 
 export const router = createBrowserRouter([
   {
@@ -39,7 +40,7 @@ export const router = createBrowserRouter([
       { path: "payment", Component: Payment },
 
       {
-        Component: AuthLayout, 
+        Component: AuthLayout,
         children: [
           { path: "login", Component: Login },
           { path: "register", Component: Register },
@@ -79,6 +80,7 @@ export const router = createBrowserRouter([
           </RequireRole>
         ),
       },
+      { path: "create-service", element: <CreateService /> },
     ],
   },
 ]);
