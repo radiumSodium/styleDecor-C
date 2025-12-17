@@ -123,7 +123,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-base-200">
       {/* Top bar */}
-      <div className="navbar bg-base-100 border-b sticky top-0 z-50">
+      {/* <div className="navbar bg-base-100 border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto w-full px-4 flex justify-between">
           <div>
             <div className="text-xl font-black">
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
             </button>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Tabs */}
       <div className="max-w-7xl mx-auto px-4 pt-5">
