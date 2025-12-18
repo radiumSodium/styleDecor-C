@@ -40,7 +40,7 @@ export default function DecoratorsSection({
               ? d.tags
               : ["Onsite setup", "Theme planning", "Coordination", "Setup"],
         }))
-      : FALLBACK;
+      : [];
 
   return (
     <section className="bg-base-200">
