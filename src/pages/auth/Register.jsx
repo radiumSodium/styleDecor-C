@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../../auth/useAuth";
 import { roleToDashboard } from "../../auth/roleRedirect";
+import { uploadToImgBB } from "../../utils/uploadToImgBB";
 
 export default function Register() {
   const { register, googleLogin, user, loading, authReady } = useAuth();
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
-  const [photoURL, setPhotoURL] = useState("");
+  const [photoFile, setPhotoFile] = useState(null); // ✅ file input
+  const [photoPreview, setPhotoPreview] = useState(""); // ✅ preview
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -27,7 +29,15 @@ export default function Register() {
     e.preventDefault();
     setErr("");
     setSubmitting(true);
+
     try {
+      let photoURL = "";
+
+      // ✅ upload image if user picked one
+      if (photoFile) {
+        photoURL = await uploadToImgBB(photoFile);
+      }
+
       await register({ name, email, password, photoURL });
     } catch (error) {
       setErr(error?.message || "Registration failed");
@@ -77,18 +87,39 @@ export default function Register() {
           />
         </label>
 
+        {/* ✅ REAL profile image upload */}
         <label className="form-control w-full">
           <div className="label pb-1">
             <span className="label-text font-medium">
-              Profile photo URL (optional)
+              Profile photo (optional)
             </span>
           </div>
-          <input
-            className="input input-bordered w-full h-12 rounded-xl"
-            value={photoURL}
-            onChange={(e) => setPhotoURL(e.target.value)}
-            placeholder="https://..."
-          />
+
+          <div className="flex items-center gap-3">
+            <div className="avatar">
+              <div className="w-12 rounded-full ring ring-primary/20 ring-offset-2 ring-offset-base-100">
+                <img
+                  src={photoPreview || "https://i.pravatar.cc/100?img=12"}
+                  alt="preview"
+                />
+              </div>
+            </div>
+
+            <input
+              type="file"
+              accept="image/*"
+              className="file-input file-input-bordered w-full h-12 rounded-xl"
+              onChange={(e) => {
+                const f = e.target.files?.[0] || null;
+                setPhotoFile(f);
+                setPhotoPreview(f ? URL.createObjectURL(f) : "");
+              }}
+            />
+          </div>
+
+          <div className="mt-2 text-xs opacity-60">
+            Uploads to ImageBB, then saves URL automatically.
+          </div>
         </label>
 
         <label className="form-control w-full">
@@ -120,7 +151,6 @@ export default function Register() {
           />
         </label>
 
-        {/* Register button – padding fixed */}
         <button
           className="btn btn-primary w-full h-12 rounded-xl mt-2"
           disabled={submitting}
@@ -129,10 +159,8 @@ export default function Register() {
         </button>
       </form>
 
-      {/* Divider */}
       <div className="divider my-2">OR</div>
 
-      {/* Google button */}
       <button
         onClick={handleGoogle}
         className="btn btn-outline w-full h-12 rounded-xl"
@@ -141,7 +169,6 @@ export default function Register() {
         Continue with Google
       </button>
 
-      {/* Footer link */}
       <p className="text-sm opacity-70 text-center">
         Already have an account?{" "}
         <Link className="link link-primary font-medium" to="/login">

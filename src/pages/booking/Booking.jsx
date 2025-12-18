@@ -1,12 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import useAuth from "../../auth/useAuth";
 
 function formatMoneyBDT(n) {
   if (typeof n !== "number") return "—";
   return `৳${n.toLocaleString("en-BD")}`;
 }
 
-// ✅ Declare helper component OUTSIDE render (prevents "Cannot create components during render")
+// ✅ Declare helper component OUTSIDE render
 function Label({ children }) {
   return <div className="label px-0 py-0 pb-2">{children}</div>;
 }
@@ -14,8 +15,23 @@ function Label({ children }) {
 export default function Booking() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const draft = location.state;
+  // ✅ read draft from route state OR sessionStorage
+  const draft = useMemo(() => {
+    if (location.state?.serviceId) return location.state;
+
+    const saved = sessionStorage.getItem("sd_booking_draft");
+    if (!saved) return null;
+
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed?.serviceId ? parsed : null;
+    } catch {
+      return null;
+    }
+  }, [location.state]);
+
   const ok = useMemo(() => !!draft?.serviceId, [draft]);
 
   const [customerName, setCustomerName] = useState("");
@@ -26,14 +42,20 @@ export default function Booking() {
   const [address, setAddress] = useState("");
   const [agree, setAgree] = useState(false);
 
+  // ✅ Auto-fill name from logged-in user
+  useEffect(() => {
+    if (!customerName && (user?.name || user?.displayName)) {
+      setCustomerName(user?.name || user?.displayName);
+    }
+  }, [user, customerName]);
+
   const canContinue = customerName && phone && venue && agree;
 
   if (!ok) {
     return (
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         <div className="alert alert-warning">
-          Booking data missing (page refresh clears route state). Please select
-          a service again.
+          Booking data missing. Please select a service again.
         </div>
         <div className="mt-6">
           <Link to="/services" className="btn btn-primary rounded-xl">
@@ -47,15 +69,17 @@ export default function Booking() {
   const handleProceedToPayment = () => {
     if (!canContinue) return;
 
-    navigate("/payment", {
-      state: {
-        ...draft,
-        customerName,
-        phone,
-        venue,
-        address,
-      },
-    });
+    // ✅ persist user-entered details too (optional, but helps refresh)
+    const nextDraft = {
+      ...draft,
+      customerName,
+      phone,
+      venue,
+      address,
+    };
+    sessionStorage.setItem("sd_booking_draft", JSON.stringify(nextDraft));
+
+    navigate("/payment", { state: nextDraft });
   };
 
   return (
@@ -156,8 +180,20 @@ export default function Booking() {
                 />
               </label>
 
-              {/* Phone */}
+              {/* Email (prefilled readonly) */}
               <label className="form-control w-full">
+                <Label>
+                  <span className="label-text font-semibold">Email</span>
+                </Label>
+                <input
+                  className="input input-bordered rounded-xl w-full"
+                  value={user?.email || ""}
+                  readOnly
+                />
+              </label>
+
+              {/* Phone */}
+              <label className="form-control w-full md:col-span-2">
                 <Label>
                   <span className="label-text font-semibold">Phone</span>
                 </Label>

@@ -22,23 +22,56 @@ const CITIES = [
 export default function Home() {
   const [services, setServices] = useState([]);
   const [decorators, setDecorators] = useState([]);
-  const [loadingDeco, setLoadingDeco] = useState(false);
+  const [loadingServices, setLoadingServices] = useState(true);
+  const [loadingDeco, setLoadingDeco] = useState(true);
 
   useEffect(() => {
-    axiosSecure
-      .get("/api/services")
-      .then((r) => setServices(r.data?.data || r.data || []))
-      .catch(() => {});
+    let ignore = false;
 
-    setLoadingDeco(true);
-    axiosSecure
-      .get("/api/decorators")
-      .then((r) => setDecorators(r.data?.data || r.data || []))
-      .catch(() => {})
-      .finally(() => setLoadingDeco(false));
+    const load = async () => {
+      // one render turn flips both loading states
+      setLoadingServices(true);
+      setLoadingDeco(true);
+
+      try {
+        const [servicesRes, decoRes] = await Promise.allSettled([
+          axiosSecure.get("/api/services"),
+          axiosSecure.get("/api/decorators"),
+        ]);
+
+        if (ignore) return;
+
+        // services
+        if (servicesRes.status === "fulfilled") {
+          const list =
+            servicesRes.value?.data?.data || servicesRes.value?.data || [];
+          setServices(Array.isArray(list) ? list : []);
+        } else {
+          setServices([]);
+        }
+
+        // decorators
+        if (decoRes.status === "fulfilled") {
+          const list = decoRes.value?.data?.data || decoRes.value?.data || [];
+          setDecorators(Array.isArray(list) ? list : []);
+        } else {
+          setDecorators([]);
+        }
+      } finally {
+        if (!ignore) {
+          setLoadingServices(false);
+          setLoadingDeco(false);
+        }
+      }
+    };
+
+    load();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
-  // Only show real decorators; no fake dummy cards
+  // Only show real decorators; no fake dummy cards in Home (fallback handled inside DecoratorsSection)
   const realDecorators = useMemo(() => {
     return (decorators || [])
       .filter(
@@ -47,6 +80,13 @@ export default function Home() {
       )
       .slice(0, 6);
   }, [decorators]);
+
+  const servicesToRender = useMemo(() => {
+    // show 6 skeleton cards while loading
+    if (loadingServices)
+      return Array.from({ length: 6 }).map((_, i) => ({ _id: `sk-${i}` }));
+    return services;
+  }, [loadingServices, services]);
 
   return (
     <div>
@@ -103,51 +143,70 @@ export default function Home() {
         </div>
 
         <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(services.length ? services : Array.from({ length: 6 })).map(
-            (s, idx) => (
+          {servicesToRender.map((s, idx) => {
+            const isSkeleton = String(s?._id || "").startsWith("sk-");
+            return (
               <div
                 key={s?._id || idx}
                 className="card bg-base-100 border shadow-sm hover:shadow-md transition"
               >
                 <figure className="h-44 bg-base-200">
-                  <img
-                    className="h-full w-full object-cover"
-                    src={
-                      s?.image ||
-                      "https://images.unsplash.com/photo-1523438097201-512ae7d59cfc?auto=format&fit=crop&w=1200&q=60"
-                    }
-                    alt={s?.title || "Service"}
-                  />
+                  {isSkeleton ? (
+                    <div className="h-full w-full animate-pulse bg-base-300" />
+                  ) : (
+                    <img
+                      className="h-full w-full object-cover"
+                      src={
+                        s?.image ||
+                        "https://images.unsplash.com/photo-1523438097201-512ae7d59cfc?auto=format&fit=crop&w=1200&q=60"
+                      }
+                      alt={s?.title || "Service"}
+                    />
+                  )}
                 </figure>
+
                 <div className="card-body">
-                  <h3 className="card-title">
-                    {s?.title || "Premium Ceremony Decor"}
-                  </h3>
-                  <p className="opacity-70">
-                    {s?.description || "Stage, floral, lighting & full setup."}
-                  </p>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="font-bold">
-                      {s?.price ? `৳${s.price}` : "From ৳5,000"}
-                    </span>
-                    <Link
-                      to={`/services/${s?._id || ""}`}
-                      className="btn btn-sm btn-ghost"
-                    >
-                      Details
-                    </Link>
-                  </div>
+                  {isSkeleton ? (
+                    <>
+                      <div className="h-5 w-3/4 rounded bg-base-200 animate-pulse" />
+                      <div className="mt-3 h-4 w-full rounded bg-base-200 animate-pulse" />
+                      <div className="mt-2 h-4 w-2/3 rounded bg-base-200 animate-pulse" />
+                      <div className="mt-5 flex items-center justify-between">
+                        <div className="h-5 w-20 rounded bg-base-200 animate-pulse" />
+                        <div className="h-9 w-20 rounded bg-base-200 animate-pulse" />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="card-title">{s?.title}</h3>
+                      <p className="opacity-70">
+                        {s?.description ||
+                          "Stage, floral, lighting & full setup."}
+                      </p>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="font-bold">
+                          {typeof s?.price === "number" ? `৳${s.price}` : "—"}
+                        </span>
+                        <Link
+                          to={`/services/${s?._id}`}
+                          className="btn btn-sm btn-ghost"
+                        >
+                          Details
+                        </Link>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
-            )
-          )}
+            );
+          })}
         </div>
       </section>
 
-      {/* Top Decorator  */}
+      {/* TOP DECORATORS */}
       <DecoratorsSection loading={loadingDeco} decorators={realDecorators} />
 
-      {/* COVERAGE MAP (multi-city markers) */}
+      {/* COVERAGE MAP */}
       <section className="max-w-6xl mx-auto px-6 py-16">
         <div className="flex items-end justify-between gap-4">
           <div>
@@ -164,8 +223,9 @@ export default function Home() {
         <div className="mt-8 rounded-2xl overflow-hidden border bg-base-100">
           <MapContainer
             center={[23.8103, 90.4125]}
-            zoom={10}
+            zoom={7}
             style={{ height: 380, width: "100%" }}
+            scrollWheelZoom={false}
           >
             <TileLayer
               attribution="&copy; OpenStreetMap"
@@ -182,7 +242,7 @@ export default function Home() {
                   </Popup>
                 </Marker>
 
-                <Circle center={c.position} radius={c.radius} pathOptions={{}}>
+                <Circle center={c.position} radius={c.radius}>
                   <Popup>{c.name} coverage radius (demo)</Popup>
                 </Circle>
               </div>

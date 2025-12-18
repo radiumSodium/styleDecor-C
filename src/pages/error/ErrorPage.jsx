@@ -1,4 +1,5 @@
 import { Link, useRouteError } from "react-router-dom";
+import { FiAlertCircle } from "react-icons/fi";
 
 export default function ErrorPage() {
   const err = useRouteError();
@@ -7,36 +8,42 @@ export default function ErrorPage() {
   const message =
     err?.statusText ||
     err?.message ||
-    "The page you requested could not be found.";
+    "The page you are looking for doesn’t exist or may have been moved.";
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-6">
-      <div className="max-w-xl w-full card bg-base-100 border shadow-sm">
-        <div className="card-body">
-          <h1 className="text-4xl font-black">
-            {status ? `Error ${status}` : "Oops!"}
-          </h1>
-          <p className="mt-2 opacity-70">{message}</p>
+    <div className="min-h-screen w-full flex items-center justify-center px-6 bg-base-200">
+      <div className="max-w-lg w-full card bg-base-100 border shadow-sm">
+        <div className="card-body p-8 text-center">
+          {/* Icon */}
+          <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+            <FiAlertCircle className="text-3xl text-primary" />
+          </div>
 
-          <div className="mt-6 flex gap-3">
-            <Link to="/" className="btn btn-primary">
-              Go Home
+          {/* Title */}
+          <h1 className="mt-5 text-3xl sm:text-4xl font-black tracking-tight">
+            {status ? `Error ${status}` : "Something went wrong"}
+          </h1>
+
+          {/* Message */}
+          <p className="mt-3 text-sm sm:text-base opacity-70 leading-relaxed">
+            {message}
+          </p>
+
+          {/* Actions */}
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+            <Link to="/" className="btn btn-primary rounded-full px-8">
+              Back to Home
             </Link>
-            <Link to="/services" className="btn btn-outline">
-              Services
+
+            <Link to="/services" className="btn btn-outline rounded-full px-8">
+              Browse Services
             </Link>
           </div>
 
-          {import.meta.env.DEV && err && (
-            <details className="mt-6">
-              <summary className="cursor-pointer opacity-70">
-                Developer details
-              </summary>
-              <pre className="mt-3 p-3 rounded bg-base-200 overflow-auto text-xs">
-                {JSON.stringify(err, null, 2)}
-              </pre>
-            </details>
-          )}
+          {/* Footer hint */}
+          <p className="mt-6 text-xs opacity-50">
+            If the problem continues, please contact our support team.
+          </p>
         </div>
       </div>
     </div>

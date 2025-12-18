@@ -1,25 +1,36 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import axiosSecure from "../../api/axiosSecure";
 import { StatusTimeline } from "../../components/StatusTimeline";
-
-function formatMoneyBDT(n) {
-  if (typeof n !== "number") return "—";
-  return `৳${n.toLocaleString("en-BD")}`;
-}
+import SectionCard from "../../components/dashboard/SectionCard";
+import PaymentBadge from "../../components/dashboard/PaymentBadge";
+import CancelBookingButton from "../../components/dashboard/CancelBookingButton";
+import PayNowButton from "../../components/dashboard/PayNowButton";
+import ProfileCard from "../../components/dashboard/ProfileCard";
+import PaymentHistoryTable from "../../components/dashboard/PaymentHistoryTable";
+import { formatMoneyBDT } from "../../utils/money";
 
 export default function UserDashboard() {
   const [bookings, setBookings] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
+  const load = async (keepSelection = true) => {
     setLoading(true);
     try {
       const res = await axiosSecure.get("/api/bookings/my");
       const list = res.data?.data || [];
       setBookings(list);
-      setActiveId(list?.[0]?._id || null);
+
+      if (!keepSelection) {
+        setActiveId(list?.[0]?._id || null);
+      } else {
+        setActiveId((prev) =>
+          prev && list.some((b) => b._id === prev)
+            ? prev
+            : list?.[0]?._id || null
+        );
+      }
     } catch (e) {
       console.error(e);
       setBookings([]);
@@ -30,17 +41,22 @@ export default function UserDashboard() {
   };
 
   useEffect(() => {
-    load();
+    load(false);
   }, []);
 
-  const active = bookings.find((b) => b._id === activeId);
+  const active = useMemo(
+    () => bookings.find((b) => b._id === activeId),
+    [bookings, activeId]
+  );
 
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-black">User Dashboard</h1>
-          <p className="opacity-70 mt-2">Your bookings & status updates.</p>
+          <p className="opacity-70 mt-2">
+            Profile, bookings, cancellations & payments.
+          </p>
         </div>
         <Link to="/services" className="btn btn-primary rounded-full">
           Book New
@@ -48,15 +64,21 @@ export default function UserDashboard() {
       </div>
 
       <div className="mt-6 grid lg:grid-cols-3 gap-6">
-        <div className="card bg-base-100 border lg:col-span-1">
-          <div className="card-body">
-            <div className="flex items-center justify-between">
-              <h2 className="font-bold">My Bookings</h2>
-              <button onClick={load} className="btn btn-ghost btn-sm">
+        {/* Left column */}
+        <div className="lg:col-span-1 space-y-6">
+          <ProfileCard />
+
+          <SectionCard
+            title="My Bookings"
+            right={
+              <button
+                onClick={() => load(true)}
+                className="btn btn-ghost btn-sm"
+              >
                 Refresh
               </button>
-            </div>
-
+            }
+          >
             {loading ? (
               <div className="opacity-70">Loading...</div>
             ) : bookings.length === 0 ? (
@@ -67,7 +89,7 @@ export default function UserDashboard() {
                 </Link>
               </div>
             ) : (
-              <div className="mt-3 space-y-3">
+              <div className="space-y-3">
                 {bookings.map((b) => (
                   <button
                     key={b._id}
@@ -78,30 +100,37 @@ export default function UserDashboard() {
                         : "border-base-300"
                     }`}
                   >
-                    <div className="font-bold">{b.serviceTitle}</div>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="font-bold">{b.serviceTitle}</div>
+                      <PaymentBadge
+                        status={b.paymentStatus}
+                        transactionId={b.transactionId}
+                      />
+                    </div>
                     <div className="text-sm opacity-70">
                       {b.date} • {b.slot}
                     </div>
                     <div className="text-sm opacity-70">
                       {formatMoneyBDT(b.price)}
                     </div>
+                    {b.status === "cancelled" && (
+                      <div className="text-xs mt-1 text-error">Cancelled</div>
+                    )}
                   </button>
                 ))}
               </div>
             )}
-          </div>
+          </SectionCard>
         </div>
 
-        <div className="card bg-base-100 border lg:col-span-2">
-          <div className="card-body">
-            <h2 className="text-2xl font-black">Status Tracker</h2>
+        {/* Right column */}
+        <div className="lg:col-span-2 space-y-6">
+          <SectionCard title="Status Tracker">
             {!active ? (
-              <div className="opacity-70 mt-3">
-                Select a booking to view status.
-              </div>
+              <div className="opacity-70">Select a booking to view status.</div>
             ) : (
               <>
-                <div className="mt-4 grid md:grid-cols-3 gap-3">
+                <div className="grid md:grid-cols-3 gap-3">
                   <div className="p-4 rounded-2xl border">
                     <div className="text-sm opacity-70">Schedule</div>
                     <div className="font-bold">
@@ -113,21 +142,54 @@ export default function UserDashboard() {
                     <div className="font-bold">{active.venue}</div>
                   </div>
                   <div className="p-4 rounded-2xl border">
-                    <div className="text-sm opacity-70">Type</div>
-                    <div className="font-bold">{active.type}</div>
+                    <div className="text-sm opacity-70">Payment</div>
+                    <div className="font-bold flex items-center gap-2">
+                      <PaymentBadge
+                        status={active.paymentStatus}
+                        transactionId={active.transactionId}
+                      />
+                      <span className="opacity-70 text-sm">
+                        {formatMoneyBDT(active.price)}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <StatusTimeline statusKey={active.status} />
+                <div className="mt-4">
+                  <StatusTimeline statusKey={active.status} />
+                </div>
 
-                <div className="mt-6 flex justify-end gap-2">
-                  <Link to="/contact" className="btn btn-outline rounded-full">
+                <div className="mt-6 flex flex-wrap justify-end gap-2">
+                  {/* Pay button only if unpaid & not cancelled */}
+                  {active.paymentStatus !== "paid" &&
+                    active.status !== "cancelled" && (
+                      <PayNowButton booking={active} />
+                    )}
+
+                  {/* Cancel only if not cancelled & not completed */}
+                  <CancelBookingButton
+                    bookingId={active._id}
+                    disabled={
+                      active.status === "cancelled" ||
+                      active.status === "complete"
+                    }
+                    onDone={() => load(true)}
+                  />
+
+                  <Link
+                    to="/contact"
+                    className="btn btn-outline btn-sm rounded-xl"
+                  >
                     Support
                   </Link>
                 </div>
               </>
             )}
-          </div>
+          </SectionCard>
+
+          <SectionCard title="Payment History & Receipts">
+            <PaymentHistoryTable />
+          </SectionCard>
         </div>
       </div>
     </div>
