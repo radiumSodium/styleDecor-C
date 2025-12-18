@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import axiosSecure from "../../api/axiosSecure";
 import { STATUS_STEPS, StatusTimeline } from "../../components/StatusTimeline";
+import PaymentBadge from "../../components/dashboard/PaymentBadge";
+import { formatMoneyBDT } from "../../utils/money";
 
 function badgeClass(status) {
   switch (status) {
@@ -79,6 +81,18 @@ export default function DecoratorDashboard() {
       return matchQ && matchStatus;
     });
   }, [list, q, statusFilter]);
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const todaysJobs = useMemo(() => {
+    return list.filter((b) => b.date === today);
+  }, [list, today]);
+
+  const earnings = useMemo(() => {
+    return list
+      .filter((b) => b.paymentStatus === "paid" && b.status === "complete")
+      .reduce((sum, b) => sum + Number(b.price || 0), 0);
+  }, [list]);
 
   const updateStatus = async (status) => {
     if (!active) return;
@@ -168,6 +182,24 @@ export default function DecoratorDashboard() {
             </select>
           </div>
         </div>
+        <div className="mt-4 grid md:grid-cols-3 gap-3">
+          <div className="p-4 rounded-2xl border bg-base-100">
+            <div className="text-sm opacity-70">Today's Schedule</div>
+            <div className="text-2xl font-black">{todaysJobs.length}</div>
+            <div className="text-xs opacity-60">Date: {today}</div>
+          </div>
+          <div className="p-4 rounded-2xl border bg-base-100">
+            <div className="text-sm opacity-70">Assigned Projects</div>
+            <div className="text-2xl font-black">{list.length}</div>
+          </div>
+          <div className="p-4 rounded-2xl border bg-base-100">
+            <div className="text-sm opacity-70">Earnings Summary</div>
+            <div className="text-2xl font-black">
+              {formatMoneyBDT(earnings)}
+            </div>
+            <div className="text-xs opacity-60">Paid & completed</div>
+          </div>
+        </div>
 
         {err && <div className="alert alert-error mt-4">{err}</div>}
         {loading && (
@@ -213,6 +245,15 @@ export default function DecoratorDashboard() {
                         Team: {b.assignedTeam}
                       </div>
                     )}
+                    <div className="mt-2 flex items-center gap-2">
+                      <PaymentBadge
+                        status={b.paymentStatus}
+                        transactionId={b.transactionId}
+                      />
+                      <span className="text-xs opacity-60">
+                        {formatMoneyBDT(b.price)}
+                      </span>
+                    </div>
                   </button>
                 ))}
 
@@ -333,6 +374,17 @@ export default function DecoratorDashboard() {
 
                   {/* status buttons */}
                   <div className="mt-6">
+                    {active.paymentStatus !== "paid" && (
+                      <div className="alert alert-warning mt-4">
+                        This booking is unpaid. Status updates are locked until
+                        payment is completed.
+                      </div>
+                    )}
+                    {active.status === "cancelled" && (
+                      <div className="alert alert-error mt-4">
+                        This booking was cancelled. Status updates are disabled.
+                      </div>
+                    )}
                     <div className="text-sm font-semibold mb-2">
                       Update Progress
                     </div>
@@ -341,7 +393,11 @@ export default function DecoratorDashboard() {
                       {STATUS_STEPS.map((s) => (
                         <button
                           key={s.key}
-                          disabled={saving}
+                          disabled={
+                            saving ||
+                            active.paymentStatus !== "paid" ||
+                            active.status === "cancelled"
+                          }
                           onClick={() => updateStatus(s.key)}
                           className={`btn rounded-xl ${
                             active.status === s.key
