@@ -82,9 +82,9 @@ export default function DecoratorsSection({
                 key={d.id}
                 className="card bg-base-100 border shadow-sm hover:shadow-md transition overflow-hidden"
               >
-                <div className="h-1.5 w-full bg-gradient-to-r from-primary/70 via-primary/25 to-transparent" />
+                <div className="h-1.5 w-full bg-linear-to-r from-primary/70 via-primary/25 to-transparent" />
 
-                <div className="card-body flex flex-col gap-4 min-h-[240px]">
+                <div className="card-body flex flex-col gap-4 min-h-60">
                   <div className="flex items-start gap-4">
                     <div className="avatar shrink-0">
                       <div className="w-14 rounded-2xl ring ring-primary/15 ring-offset-2 ring-offset-base-100">

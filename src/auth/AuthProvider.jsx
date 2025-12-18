@@ -1,4 +1,11 @@
-import { createContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
@@ -21,13 +28,13 @@ export default function AuthProvider({ children }) {
 
   const lastSessionUidRef = useRef(null);
 
-  const clearUserSessionStorage = () => {
+  const clearUserSessionStorage = useCallback(() => {
     Object.keys(sessionStorage)
       .filter((k) => k.startsWith("sd_booking_id_"))
       .forEach((k) => sessionStorage.removeItem(k));
-  };
+  }, []);
 
-  const createSession = async (firebaseUser) => {
+  const createSession = useCallback(async (firebaseUser) => {
     // always clear old token
     localStorage.removeItem("sd_jwt");
 
@@ -52,7 +59,7 @@ export default function AuthProvider({ children }) {
     localStorage.setItem("sd_jwt", data.token);
     setDbUser(data.user);
     return data.user;
-  };
+  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -90,32 +97,38 @@ export default function AuthProvider({ children }) {
     });
 
     return () => unsub();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dbUser?.uid]); // keep dependency light
+    // keep dependency light but correct
+  }, [dbUser?.uid, clearUserSessionStorage, createSession]);
 
-  const register = async ({ name, email, password, photoURL }) => {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
+  const register = useCallback(
+    async ({ name, email, password, photoURL }) => {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
 
-    if (name || photoURL) {
-      await updateProfile(cred.user, { displayName: name, photoURL });
-    }
+      if (name || photoURL) {
+        await updateProfile(cred.user, { displayName: name, photoURL });
+      }
 
-    // ✅ create backend session immediately
-    await createSession(cred.user);
+      // ✅ create backend session immediately
+      await createSession(cred.user);
 
-    return cred.user;
-  };
+      return cred.user;
+    },
+    [createSession]
+  );
 
-  const login = async ({ email, password }) => {
-    const cred = await signInWithEmailAndPassword(auth, email, password);
+  const login = useCallback(
+    async ({ email, password }) => {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
 
-    // ✅ create backend session immediately
-    await createSession(cred.user);
+      // ✅ create backend session immediately
+      await createSession(cred.user);
 
-    return cred.user;
-  };
+      return cred.user;
+    },
+    [createSession]
+  );
 
-  const googleLogin = async () => {
+  const googleLogin = useCallback(async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
 
@@ -126,15 +139,15 @@ export default function AuthProvider({ children }) {
     await createSession(cred.user);
 
     return cred.user;
-  };
+  }, [createSession]);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     localStorage.removeItem("sd_jwt");
     setDbUser(null);
     lastSessionUidRef.current = null;
     clearUserSessionStorage();
     await signOut(auth);
-  };
+  }, [clearUserSessionStorage]);
 
   const value = useMemo(
     () => ({
@@ -147,7 +160,7 @@ export default function AuthProvider({ children }) {
       googleLogin,
       logout,
     }),
-    [fbUser, dbUser, loading, authReady]
+    [fbUser, dbUser, loading, authReady, register, login, googleLogin, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

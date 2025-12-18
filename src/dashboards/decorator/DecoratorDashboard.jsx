@@ -183,7 +183,7 @@ export default function DecoratorDashboard() {
                 <span className="badge badge-outline">{filtered.length}</span>
               </div>
 
-              <div className="mt-3 space-y-2 max-h-[560px] overflow-y-auto">
+              <div className="mt-3 space-y-2 max-h-140 overflow-y-auto">
                 {filtered.map((b) => (
                   <button
                     key={b._id}
