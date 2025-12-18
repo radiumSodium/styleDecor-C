@@ -32,22 +32,12 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: Home },
       { path: "services", Component: Services },
-
-      // ✅ PROTECTED: service details
-      {
-        path: "services/:id",
-        Component: () => (
-          <RequireAuth>
-            <ServiceDetails />
-          </RequireAuth>
-        ),
-      },
+      { path: "services/:id", Component: ServiceDetails },
 
       { path: "coverage", Component: CoverageMapPage },
       { path: "about", Component: About },
       { path: "contact", Component: Contact },
 
-      // ✅ PROTECTED: booking
       {
         path: "booking",
         Component: () => (
@@ -56,8 +46,6 @@ export const router = createBrowserRouter([
           </RequireAuth>
         ),
       },
-
-      // ✅ PROTECTED: payment
       {
         path: "payment",
         Component: () => (
@@ -77,7 +65,6 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // ✅ PROTECTED: entire dashboard already protected here
   {
     path: "/dashboard",
     Component: () => (

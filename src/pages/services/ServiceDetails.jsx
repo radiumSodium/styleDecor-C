@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import axiosSecure from "../../api/axiosSecure";
+import useAuth from "../../auth/useAuth";
 
 function formatMoneyBDT(n) {
   if (typeof n !== "number") return "—";
@@ -30,6 +31,7 @@ export default function ServiceDetails() {
   const [date, setDate] = useState("");
   const [slot, setSlot] = useState("");
   const [notes, setNotes] = useState("");
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
     let ignore = false;
@@ -57,19 +59,28 @@ export default function ServiceDetails() {
   const handleContinue = () => {
     if (!canContinue) return;
 
-    navigate("/booking", {
-      state: {
-        serviceId: service?._id,
-        serviceTitle: service?.title,
-        price: service?.price,
-        date,
-        slot,
-        notes,
-        type: service?.type,
-        category: service?.category,
-        image: service?.image,
-      },
-    });
+    // ✅ only booking action requires login
+    if (!user?.email) {
+      navigate("/login", { state: { from: `/services/${id}` } });
+      return;
+    }
+
+    // ✅ store draft in sessionStorage so refresh doesn't break
+    const draft = {
+      serviceId: service?._id,
+      serviceTitle: service?.title,
+      price: service?.price,
+      date,
+      slot,
+      notes,
+      type: service?.type,
+      category: service?.category,
+      image: service?.image,
+    };
+
+    sessionStorage.setItem("sd_booking_draft", JSON.stringify(draft));
+
+    navigate("/booking", { state: draft });
   };
 
   if (loading) {
@@ -275,10 +286,10 @@ export default function ServiceDetails() {
                 {/* Actions */}
                 <button
                   onClick={handleContinue}
-                  disabled={!canContinue}
+                  disabled={!canContinue || authLoading}
                   className="btn btn-primary w-full rounded-xl"
                 >
-                  Continue to Booking
+                  {user?.email ? "Continue to Booking" : "Login to Book"}
                 </button>
 
                 <div className="grid grid-cols-2 gap-2">
