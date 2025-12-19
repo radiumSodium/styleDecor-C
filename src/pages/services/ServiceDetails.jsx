@@ -59,13 +59,13 @@ export default function ServiceDetails() {
   const handleContinue = () => {
     if (!canContinue) return;
 
-    // ✅ only booking action requires login
+    // only booking action requires login
     if (!user?.email) {
       navigate("/login", { state: { from: `/services/${id}` } });
       return;
     }
 
-    // ✅ store draft in sessionStorage so refresh doesn't break
+    //  store draft in sessionStorage so refresh doesn't break
     const draft = {
       serviceId: service?._id,
       serviceTitle: service?.title,
@@ -210,7 +210,7 @@ export default function ServiceDetails() {
                 proceed to payment.
               </p>
 
-              {/* ✅ unified spacing block */}
+              {/* unified spacing block */}
               <div className="mt-6 grid gap-5">
                 {/* Date */}
                 <label className="form-control w-full">

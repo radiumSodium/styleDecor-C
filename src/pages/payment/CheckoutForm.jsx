@@ -20,7 +20,6 @@ export default function CheckoutForm({ booking, onPaid }) {
     try {
       setPaying(true);
 
-      // 1) Create payment intent
       const { data } = await axiosSecure.post(
         "/api/payments/create-payment-intent",
         {
@@ -37,7 +36,6 @@ export default function CheckoutForm({ booking, onPaid }) {
       const clientSecret = data?.clientSecret;
       if (!clientSecret) throw new Error("No client secret received");
 
-      // 2) Confirm card payment
       const card = elements.getElement(CardElement);
 
       const result = await stripe.confirmCardPayment(clientSecret, {
@@ -49,7 +47,6 @@ export default function CheckoutForm({ booking, onPaid }) {
       }
 
       if (result.paymentIntent?.status === "succeeded") {
-        // 3) Mark booking as paid in DB
         await axiosSecure.patch(`/api/bookings/${booking._id}/pay`, {
           transactionId: result.paymentIntent.id,
         });

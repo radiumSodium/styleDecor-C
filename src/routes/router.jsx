@@ -98,7 +98,6 @@ export const router = createBrowserRouter([
         ),
       },
 
-      // ✅ PROTECTED: only admin/decorator can create service
       {
         path: "create-service",
         Component: () => (

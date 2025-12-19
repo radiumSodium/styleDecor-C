@@ -91,7 +91,6 @@ export default function Login() {
           />
         </label>
 
-        {/* Login button – padding fixed */}
         <button
           className="btn btn-primary w-full h-12 rounded-xl mt-2"
           disabled={submitting}
@@ -100,7 +99,6 @@ export default function Login() {
         </button>
       </form>
 
-      {/* Divider */}
       <div className="divider my-2">OR</div>
 
       {/* Google login */}
@@ -112,7 +110,6 @@ export default function Login() {
         Continue with Google
       </button>
 
-      {/* Register link (kept minimal, no quick links) */}
       <p className="text-sm opacity-70 text-center">
         New here?{" "}
         <Link className="link link-primary font-medium" to="/register">

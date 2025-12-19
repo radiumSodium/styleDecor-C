@@ -9,8 +9,8 @@ export default function Register() {
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
-  const [photoFile, setPhotoFile] = useState(null); // ✅ file input
-  const [photoPreview, setPhotoPreview] = useState(""); // ✅ preview
+  const [photoFile, setPhotoFile] = useState(null); 
+  const [photoPreview, setPhotoPreview] = useState(""); 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -33,7 +33,6 @@ export default function Register() {
     try {
       let photoURL = "";
 
-      // ✅ upload image if user picked one
       if (photoFile) {
         photoURL = await uploadToImgBB(photoFile);
       }
@@ -87,7 +86,7 @@ export default function Register() {
           />
         </label>
 
-        {/* ✅ REAL profile image upload */}
+        {/* REAL profile image upload */}
         <label className="form-control w-full">
           <div className="label pb-1">
             <span className="label-text font-medium">

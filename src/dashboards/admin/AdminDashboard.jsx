@@ -185,7 +185,7 @@ export default function AdminDashboard() {
     }
   };
 
-  // ✅ Approve/Disable decorator accounts
+  // Approve/Disable decorator accounts
   const toggleUserActive = async (userId, isActive) => {
     setSavingActive(true);
     setErr("");

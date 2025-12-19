@@ -74,7 +74,6 @@ export default function CreateService() {
 
   return (
     <div className="w-full">
-      {/* Header row (aligned like your dashboards) */}
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
           <h1 className="text-3xl md:text-4xl font-black">Create Service</h1>
@@ -297,7 +296,6 @@ export default function CreateService() {
         </div>
       </div>
 
-      {/* bottom spacing like other pages */}
       <div className="h-6" />
     </div>
   );

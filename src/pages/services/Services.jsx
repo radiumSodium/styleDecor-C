@@ -43,7 +43,6 @@ export default function Services() {
         setLoading(true);
         setErr("");
 
-        // Option: You can pass query params if you later support server filtering
         const res = await axiosSecure.get("/api/services");
         const list = res.data?.data || [];
 

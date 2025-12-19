@@ -22,10 +22,8 @@ export default function Payment() {
   const [creating, setCreating] = useState(true);
   const [error, setError] = useState("");
 
-  // ✅ Prevent double-run in React StrictMode / rerenders
   const didRunRef = useRef(false);
 
-  // ✅ booking key per user (different booking id for each user)
   const bookingKey = useMemo(() => {
     const uid = fbUser?.uid || "guest";
     return `sd_booking_id_${uid}`;
@@ -38,10 +36,9 @@ export default function Payment() {
   }, []);
 
   useEffect(() => {
-    // ✅ wait for auth to be ready
     if (!authReady || loading) return;
 
-    // ✅ require login for payment
+    // require login for payment
     if (!fbUser) {
       navigate("/login", {
         replace: true,
@@ -50,13 +47,13 @@ export default function Payment() {
       return;
     }
 
-    // ✅ require serviceId from route state
+    // require serviceId from route state
     if (!state?.serviceId) {
       navigate("/services", { replace: true });
       return;
     }
 
-    // ✅ prevent duplicate calls
+    //  prevent duplicate calls
     if (didRunRef.current) return;
     didRunRef.current = true;
 
@@ -65,7 +62,7 @@ export default function Payment() {
         setCreating(true);
         setError("");
 
-        // ✅ Try to reuse existing booking ONLY for this user
+        // Try to reuse existing booking ONLY for this user
         const existingId = sessionStorage.getItem(bookingKey);
 
         if (existingId) {
@@ -81,7 +78,7 @@ export default function Payment() {
               return;
             }
           } catch (e) {
-            // ✅ stale id or belongs to someone else → clear it and continue
+            // stale id or belongs to someone else → clear it and continue
             const status = e?.response?.status;
             if (status === 401 || status === 403 || status === 404) {
               sessionStorage.removeItem(bookingKey);
@@ -91,7 +88,7 @@ export default function Payment() {
           }
         }
 
-        // ✅ Create new booking
+        // Create new booking
         const res = await axiosSecure.post("/api/bookings", state);
         const created = res.data?.data;
 
@@ -115,7 +112,6 @@ export default function Payment() {
   }, [authReady, loading, fbUser, state, navigate, bookingKey]);
 
   const handlePaid = () => {
-    // ✅ clear only this user's booking key
     sessionStorage.removeItem(bookingKey);
     navigate("/dashboard/user", { replace: true });
   };

@@ -7,7 +7,7 @@ function formatMoneyBDT(n) {
   return `৳${n.toLocaleString("en-BD")}`;
 }
 
-// ✅ Declare helper component OUTSIDE render
+// Declare helper component OUTSIDE render
 function Label({ children }) {
   return <div className="label px-0 py-0 pb-2">{children}</div>;
 }
@@ -17,7 +17,7 @@ export default function Booking() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // ✅ read draft from route state OR sessionStorage
+  //  read draft from route state OR sessionStorage
   const draft = useMemo(() => {
     if (location.state?.serviceId) return location.state;
 
@@ -42,7 +42,7 @@ export default function Booking() {
   const [address, setAddress] = useState("");
   const [agree, setAgree] = useState(false);
 
-  // ✅ Auto-fill name from logged-in user
+  // Auto-fill name from logged-in user
   useEffect(() => {
     if (!customerName && (user?.name || user?.displayName)) {
       setCustomerName(user?.name || user?.displayName);
@@ -69,7 +69,6 @@ export default function Booking() {
   const handleProceedToPayment = () => {
     if (!canContinue) return;
 
-    // ✅ persist user-entered details too (optional, but helps refresh)
     const nextDraft = {
       ...draft,
       customerName,

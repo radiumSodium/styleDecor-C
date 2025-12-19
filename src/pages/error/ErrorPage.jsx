@@ -14,17 +14,14 @@ export default function ErrorPage() {
     <div className="min-h-screen w-full flex items-center justify-center px-6 bg-base-200">
       <div className="max-w-lg w-full card bg-base-100 border shadow-sm">
         <div className="card-body p-8 text-center">
-          {/* Icon */}
           <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
             <FiAlertCircle className="text-3xl text-primary" />
           </div>
 
-          {/* Title */}
           <h1 className="mt-5 text-3xl sm:text-4xl font-black tracking-tight">
             {status ? `Error ${status}` : "Something went wrong"}
           </h1>
 
-          {/* Message */}
           <p className="mt-3 text-sm sm:text-base opacity-70 leading-relaxed">
             {message}
           </p>
@@ -40,7 +37,6 @@ export default function ErrorPage() {
             </Link>
           </div>
 
-          {/* Footer hint */}
           <p className="mt-6 text-xs opacity-50">
             If the problem continues, please contact our support team.
           </p>

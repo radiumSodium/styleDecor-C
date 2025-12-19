@@ -121,26 +121,6 @@ export default function DecoratorDashboard() {
 
   return (
     <div className="min-h-screen bg-base-200">
-      {/* top bar */}
-      {/* <div className="navbar bg-base-100 border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto w-full px-4 flex justify-between">
-          <div>
-            <div className="text-xl font-black">
-              Style<span className="text-primary">Decor</span> Decorator
-            </div>
-            <div className="text-xs opacity-60">Assigned Work & Updates</div>
-          </div>
-
-          <div className="flex gap-2">
-            <Link to="/" className="btn btn-ghost btn-sm">
-              Home
-            </Link>
-            <button onClick={load} className="btn btn-outline btn-sm">
-              Refresh
-            </button>
-          </div>
-        </div>
-      </div> */}
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* header */}

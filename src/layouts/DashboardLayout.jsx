@@ -53,7 +53,7 @@ export default function DashboardLayout() {
                   Home
                 </Link>
 
-                {/* Avatar dropdown (unified position like Navbar) */}
+                {/* Avatar dropdown */}
                 <div className="dropdown dropdown-end">
                   <div
                     tabIndex={0}
