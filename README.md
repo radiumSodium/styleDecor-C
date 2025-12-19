@@ -10,41 +10,44 @@
 
 ---
 
-## 🎯 Purpose  
-StyleDecor is a modern, full-stack decoration booking platform built for a local decoration service provider.  
-The system allows users to book studio consultations or onsite decoration services, make secure payments, track booking progress, and manage services through role-based dashboards for users, decorators, and administrators.
+## 🎯 Project Overview  
+**StyleDecor** is a modern **full-stack decoration booking platform** built for a local decoration service provider.
+
+The platform allows users to book **studio consultations** or **onsite decoration services**, make **secure online payments**, track booking progress in real time, and manage services through **role-based dashboards** for Users, Decorators, and Administrators.
+
+The system follows a **scalable client–server architecture** with a secure REST API and modern UI/UX.
 
 ---
 
 ## ✨ Key Features  
 
 ### 👤 User Features
-- Browse decoration services loaded dynamically from the server  
+- Browse decoration services loaded dynamically from the backend  
 - Book studio consultation or onsite decoration services  
-- Secure online payment using Stripe  
-- View booking status with a visual timeline  
+- Secure online payment using **Stripe**  
+- Visual booking status timeline  
 - Cancel unpaid bookings  
 - View payment history  
-- User dashboard with profile & booking management  
+- Personal dashboard for profile & booking management  
 
 ### 🎨 Decorator Features
 - View assigned bookings  
-- Update booking status (planning → setup → complete)  
-- Access service details and schedules  
+- Update booking status (Planning → Setup → Completed)  
+- Access service details, schedules, and instructions  
 
 ### 🛠️ Admin Features
 - Manage services and decorators  
 - Assign decorators or teams to bookings  
-- View all bookings and payments  
-- Full role-based access control  
+- View all bookings and payment records  
+- Full **role-based access control (RBAC)**  
 
 ### 🌍 General Features
-- Animated hero section using Framer Motion  
+- Animated hero section using **Framer Motion**  
 - Dynamic services grid with images  
 - Top decorators section with ratings & specialties  
-- Service coverage map using React Leaflet  
+- Service coverage map using **React Leaflet**  
 - Fully responsive modern UI  
-- Secure REST API with JWT authentication  
+- Secure REST API with **JWT authentication**  
 
 ---
 
@@ -67,7 +70,7 @@ The system allows users to book studio consultations or onsite decoration servic
 - Express.js  
 - MongoDB  
 - Mongoose  
-- JWT  
+- JSON Web Token (JWT)  
 - Stripe API  
 - dotenv  
 - cors  
@@ -108,8 +111,21 @@ The system allows users to book studio consultations or onsite decoration servic
 
 ## 🚀 Deployment
 - Frontend deployed on **Firebase Hosting**  
-- Backend API deployed on **Vercel**  
+- Backend API deployed on **Vercel (Serverless Functions)**  
 - Database hosted on **MongoDB Atlas**  
 - Payment system integrated with **Stripe**
 
 ---
+
+## 🔐 Security & Architecture Highlights
+- JWT-based authentication & authorization  
+- Role-based route protection  
+- Secure payment verification  
+- Environment-based configuration  
+- Production-ready REST API design  
+
+---
+
+
+
+Made with ❤️ by Rana
